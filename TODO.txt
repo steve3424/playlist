@@ -1,0 +1,4 @@
+- gracefully shutdown connection in client
+- when to reconnect in client
+- how to tell if client connection is dead on server side
+- gracefully shutdown server
