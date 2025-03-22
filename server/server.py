@@ -2,6 +2,7 @@
 Websocket server.
 """
 # TODO: Handle ctrl-c and gracefully shutdown connections
+# TODO: Enable logging of websockets lib
 
 import logging
 import logging.config
