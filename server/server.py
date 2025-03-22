@@ -1,6 +1,8 @@
 """
 Websocket server.
 """
+# TODO: Handle ctrl-c and gracefully shutdown connections
+
 import logging
 import logging.config
 from logging_conf import LOGGING_CONFIG
