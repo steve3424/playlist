@@ -1,8 +1,10 @@
-import os
+"""
+Sample client for connecting to local websocket host
+and sending messages from console.
+"""
 import asyncio
 import aioconsole
 from websockets.asyncio.client import connect, ClientConnection
-from websockets.exceptions import ConnectionClosed
 
 async def process_message_from_server(msg: str):
     pass

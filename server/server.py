@@ -54,7 +54,7 @@ async def send_handler(websocket: ServerConnection, message: str):
     except ConnectionClosedError as ex:
         LOGGER.info(f"Client {websocket.remote_address} connection closed with error: {ex}")
     except ConnectionClosedOK:
-        LOGGER.info(f"Client {websocket.remote_address} closed connection normally.")
+        LOGGER.info(f"Client {websocket.remote_address} closed connection.")
     except Exception as ex:
         LOGGER.exception(f"Client {websocket.remote_address} send error: {ex}")
 
