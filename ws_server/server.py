@@ -6,12 +6,35 @@ import logging
 import logging.config
 from logging_conf import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
+import base64
+import json
+import binascii
 import asyncio
+from websockets import Headers, CloseCode
 from websockets.asyncio.server import serve, ServerConnection
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError, ConnectionClosed
 
 LOGGER = logging.getLogger(__name__)
 CONNECTIONS = set()
+
+class TicketError(BaseException):
+    pass
+
+def checkTicket(headers: Headers) -> dict:
+    try:
+        ticket = headers.get("sec-websocket-protocol", "").split(",")[0]
+        if not ticket:
+            raise TicketError("Ticket not found!")
+        ticket = json.loads(base64.b16decode(ticket).decode("utf-8"))
+        if not ticket.get("user_id", None) and not ticket.get("band", None):
+            raise TicketError("Invalid ticket!")
+        return ticket
+    except json.decoder.JSONDecodeError:
+        raise TicketError("Ticket is invalid JSON string!")
+    except binascii.Error:
+        raise TicketError("Ticket is invalid base16 string!")
+    except UnicodeDecodeError:
+        raise TicketError("Ticket is invalid utf-8 string!")
 
 async def listen(websocket: ServerConnection):
     """
@@ -63,14 +86,22 @@ async def connection_handler(websocket: ServerConnection):
     
     LOGGER.debug(f"Client {websocket.remote_address} connected!")
     CONNECTIONS.add(websocket)
+    close_code = 1000
+    close_reason = ""
     try:
+        ticket = checkTicket(websocket.request.headers)
+        # TODO: do something w/ ticket
         await listen(websocket)
     except ConnectionClosedOK:
         LOGGER.info(f"ConnectionClosedOK sent {websocket.remote_address}!")
     except ConnectionClosedError as ex:
-        LOGGER.info(f"ConnectionClosedError from {websocket.remote_address}: {ex}")
+        LOGGER.error(f"ConnectionClosedError from {websocket.remote_address}: {ex}")
+    except TicketError as ex:
+        close_code = CloseCode.INTERNAL_ERROR
+        close_reason = str(ex)
+        LOGGER.error(close_reason)
     finally:
-        await websocket.close()
+        await websocket.close(close_code, close_reason)
         CONNECTIONS.remove(websocket)
         LOGGER.debug(f"Client {websocket.remote_address} connection closed.")
 
