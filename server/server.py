@@ -31,11 +31,6 @@ async def recv_handler(websocket: ServerConnection):
             asyncio.create_task(send_handler(client, message))
         # TODO: maybe client specific response here.
 
-# TODO: If client closes here, how do we remove from connections set.
-#       Do we remove here or propgate up the exception/some return value
-#       to close out the connection handler? Maybe this function just
-#       reports the results and the calling code is responsible for
-#       the removal of the connections.
 async def send_handler(websocket: ServerConnection, message: str):
     """
     Sends single message to single client. We may find out here that
@@ -52,11 +47,11 @@ async def send_handler(websocket: ServerConnection, message: str):
         await websocket.send(message)
         LOGGER.info(f"Client {websocket.remote_address} sent message!")
     except ConnectionClosedError as ex:
-        LOGGER.info(f"Client {websocket.remote_address} connection closed with error: {ex}")
+        LOGGER.info(f"ConnectionClosedError from {websocket.remote_address} during send: {ex}")
     except ConnectionClosedOK:
-        LOGGER.info(f"Client {websocket.remote_address} closed connection.")
+        LOGGER.info(f"ConnectionClosedOK from {websocket.remote_address} during send.")
     except Exception as ex:
-        LOGGER.exception(f"Client {websocket.remote_address} send error: {ex}")
+        LOGGER.info(f"Exception from {websocket.remote_address} during send: {ex}")
 
 async def connection_handler(websocket: ServerConnection):
     """
@@ -73,7 +68,7 @@ async def connection_handler(websocket: ServerConnection):
     try:
         await recv_handler(websocket)
     finally:
-        LOGGER.debug(f"Client {websocket.remote_address} closed connection.")
+        LOGGER.debug(f"Client {websocket.remote_address} connection closed.")
         CONNECTIONS.remove(websocket)
 
 async def run_server(host: str, port: int):
@@ -90,7 +85,6 @@ async def run_server(host: str, port: int):
     server = None
     try:
         server = await serve(connection_handler, host, port)
-        LOGGER.info(f"Listening on {host}:{port}...")
         # Run forever
         await asyncio.Future()
     finally:
