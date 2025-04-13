@@ -44,7 +44,7 @@ async def send(websocket: ServerConnection, message: str):
         Message to send.
     """
     try:
-        await websocket.send({"hey": "ther"})
+        await websocket.send(message)
         LOGGER.info(f"Client {websocket.remote_address} sent message!")
     except ConnectionClosed as ex:
         LOGGER.error(f"ConnectionClosed while sending to {websocket.remote_address}: {ex}")
@@ -116,6 +116,4 @@ def main(host: str, port: int):
         LOGGER.debug("ctrl+c stopped server!")
 
 if __name__ == "__main__":
-    host = "0.0.0.0"
-    port = 8080
-    main(host, port)
+    main("0.0.0.0", 8080)
