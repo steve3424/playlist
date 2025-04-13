@@ -8,12 +8,12 @@ from logging_conf import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
 import asyncio
 from websockets.asyncio.server import serve, ServerConnection
-from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
+from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError, ConnectionClosed
 
 LOGGER = logging.getLogger(f"__main__.{__name__}")
 CONNECTIONS = set()
 
-async def recv_handler(websocket: ServerConnection):
+async def listen(websocket: ServerConnection):
     """
     Awaits for messages incoming on a connection. The loop
     will terminate if a client closes the connection.
@@ -28,10 +28,10 @@ async def recv_handler(websocket: ServerConnection):
 
         # TODO: analyze message.
         for client in CONNECTIONS:
-            asyncio.create_task(send_handler(client, message))
+            asyncio.create_task(send(client, message))
         # TODO: maybe client specific response here.
 
-async def send_handler(websocket: ServerConnection, message: str):
+async def send(websocket: ServerConnection, message: str):
     """
     Sends single message to single client. We may find out here that
     a client disconnected.
@@ -44,14 +44,12 @@ async def send_handler(websocket: ServerConnection, message: str):
         Message to send.
     """
     try:
-        await websocket.send(message)
+        await websocket.send({"hey": "ther"})
         LOGGER.info(f"Client {websocket.remote_address} sent message!")
-    except ConnectionClosedError as ex:
-        LOGGER.info(f"ConnectionClosedError from {websocket.remote_address} during send: {ex}")
-    except ConnectionClosedOK:
-        LOGGER.info(f"ConnectionClosedOK from {websocket.remote_address} during send.")
+    except ConnectionClosed as ex:
+        LOGGER.error(f"ConnectionClosed while sending to {websocket.remote_address}: {ex}")
     except Exception as ex:
-        LOGGER.info(f"Exception from {websocket.remote_address} during send: {ex}")
+        LOGGER.error(f"Exception while sending to {websocket.remote_address}: {ex}")
 
 async def connection_handler(websocket: ServerConnection):
     """
@@ -66,10 +64,15 @@ async def connection_handler(websocket: ServerConnection):
     LOGGER.debug(f"Client {websocket.remote_address} connected!")
     CONNECTIONS.add(websocket)
     try:
-        await recv_handler(websocket)
+        await listen(websocket)
+    except ConnectionClosedOK:
+        LOGGER.info(f"ConnectionClosedOK sent {websocket.remote_address}!")
+    except ConnectionClosedError as ex:
+        LOGGER.info(f"ConnectionClosedError from {websocket.remote_address}: {ex}")
     finally:
-        LOGGER.debug(f"Client {websocket.remote_address} connection closed.")
+        await websocket.close()
         CONNECTIONS.remove(websocket)
+        LOGGER.debug(f"Client {websocket.remote_address} connection closed.")
 
 async def run_server(host: str, port: int):
     """
@@ -88,11 +91,23 @@ async def run_server(host: str, port: int):
         # Run forever
         await asyncio.Future()
     finally:
-        LOGGER.debug(f"Server stopped closing {len(CONNECTIONS)} connections...")
-        if server:
-            server.close(close_connections=True)
-            await server.wait_closed()
-            LOGGER.debug("Shutdown complete!")
+        await shutdown_server(server)
+
+async def shutdown_server(server: serve | None):
+    """
+    Shut down server.
+
+    Parameters
+    ----------
+    server
+        Server instance.
+    """
+    global CONNECTIONS
+    LOGGER.debug(f"Shutting down server. Closing {len(CONNECTIONS)} connections...")
+    if server:
+        server.close(close_connections=True)
+        await server.wait_closed()
+        LOGGER.debug("Shutdown complete!")
 
 def main(host: str, port: int):
     try:
