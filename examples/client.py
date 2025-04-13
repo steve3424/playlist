@@ -2,8 +2,6 @@
 Sample client for connecting to local websocket host
 and sending messages from console.
 """
-# TODO: gracefully handle connections closed from server
-
 import asyncio
 import aioconsole
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError, ConnectionClosed
