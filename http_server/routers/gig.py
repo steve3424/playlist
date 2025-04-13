@@ -15,7 +15,7 @@ async def ticket(
 ):
     # TODO: add to cache
     # TODO: return encrypted ticket
-    return base64.b64encode(
+    return base64.b16encode(
         json.dumps(
             {"user_id": user_info["id"], "band": band},
             separators=(",", ":")
