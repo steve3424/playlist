@@ -13,9 +13,6 @@ from websockets.asyncio.client import connect, ClientConnection
 
 LOGGER = logging.getLogger(__name__)
 
-async def process_message_from_server(msg: str):
-    pass
-
 async def ws_listener(websocket: ClientConnection):
     LOGGER.info(f"Listening to {websocket.remote_address} for messages...")
     try:
