@@ -1,14 +1,11 @@
 """
 Websocket server.
 """
-# TODO: Handle ctrl-c and gracefully shutdown connections
-# TODO: Enable logging of websockets lib
 
 import logging
 import logging.config
 from logging_conf import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
-
 import asyncio
 from websockets.asyncio.server import serve, ServerConnection
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
@@ -79,7 +76,7 @@ async def connection_handler(websocket: ServerConnection):
         LOGGER.debug(f"Client {websocket.remote_address} closed connection.")
         CONNECTIONS.remove(websocket)
 
-async def main(host: str, port: int):
+async def run_server(host: str, port: int):
     """
     Starts the websocket server.
 
@@ -90,11 +87,26 @@ async def main(host: str, port: int):
     port
         Port to listen on.
     """
-    async with serve(connection_handler, host, port) as server:
+    server = None
+    try:
+        server = await serve(connection_handler, host, port)
         LOGGER.info(f"Listening on {host}:{port}...")
-        await server.serve_forever()
+        # Run forever
+        await asyncio.Future()
+    finally:
+        LOGGER.debug(f"Server stopped closing {len(CONNECTIONS)} connections...")
+        if server:
+            server.close(close_connections=True)
+            await server.wait_closed()
+            LOGGER.debug("Shutdown complete!")
+
+def main(host: str, port: int):
+    try:
+        asyncio.run(run_server(host, port))
+    except KeyboardInterrupt:
+        LOGGER.debug("ctrl+c stopped server!")
 
 if __name__ == "__main__":
     host = "0.0.0.0"
     port = 8080
-    asyncio.run(main(host, port))
+    main(host, port)
