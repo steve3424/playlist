@@ -11,7 +11,7 @@ import aioconsole
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError, ConnectionClosed
 from websockets.asyncio.client import connect, ClientConnection
 
-LOGGER = logging.getLogger(f"__main__.{__name__}")
+LOGGER = logging.getLogger(__name__)
 
 async def process_message_from_server(msg: str):
     pass

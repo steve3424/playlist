@@ -10,7 +10,7 @@ import asyncio
 from websockets.asyncio.server import serve, ServerConnection
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError, ConnectionClosed
 
-LOGGER = logging.getLogger(f"__main__.{__name__}")
+LOGGER = logging.getLogger(__name__)
 CONNECTIONS = set()
 
 async def listen(websocket: ServerConnection):
