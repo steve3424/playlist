@@ -22,5 +22,12 @@ LOGGING_CONFIG = {
             'level': 'DEBUG',
             'propagate': False
         },
+        'websockets.server': {
+            'handlers': [
+                'stderr'
+            ],
+            'level': 'INFO',
+            'propagate': False
+        },
     } 
 }
