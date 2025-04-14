@@ -74,7 +74,7 @@ async def send(websocket: ServerConnection, message: str):
     except Exception as ex:
         LOGGER.error(f"Exception while sending to {websocket.remote_address}: {ex}")
 
-async def connection_handler(websocket: ServerConnection):
+async def connect(websocket: ServerConnection):
     """
     Called when a new connection is made to server.
 
@@ -105,7 +105,7 @@ async def connection_handler(websocket: ServerConnection):
         CONNECTIONS.remove(websocket)
         LOGGER.debug(f"Client {websocket.remote_address} connection closed.")
 
-async def run_server(host: str, port: int):
+async def startServer(host: str, port: int):
     """
     Starts the websocket server.
 
@@ -118,13 +118,13 @@ async def run_server(host: str, port: int):
     """
     server = None
     try:
-        server = await serve(connection_handler, host, port)
+        server = await serve(connect, host, port)
         # Run forever
         await asyncio.Future()
     finally:
-        await shutdown_server(server)
+        await shutdown(server)
 
-async def shutdown_server(server: serve | None):
+async def shutdown(server: serve | None):
     """
     Shut down server.
 
@@ -142,7 +142,7 @@ async def shutdown_server(server: serve | None):
 
 def main(host: str, port: int):
     try:
-        asyncio.run(run_server(host, port))
+        asyncio.run(startServer(host, port))
     except KeyboardInterrupt:
         LOGGER.debug("ctrl+c stopped server!")
 
