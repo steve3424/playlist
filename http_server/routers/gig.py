@@ -1,8 +1,9 @@
 import logging
 import base64
 import json
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from middlewares.auth import Authenticate
+from services.encryption import CIPHER
 
 LOGGER = logging.getLogger(f"__main__.{__name__}")
 
@@ -14,10 +15,11 @@ async def ticket(
     user_info: dict=Depends(Authenticate(permission_level=1))
 ):
     # TODO: add to cache
-    # TODO: return encrypted ticket
     return base64.b16encode(
-        json.dumps(
-            {"user_id": user_info["id"], "band": band},
-            separators=(",", ":")
-        ).encode("utf-8")
-    ).decode("utf-8")
+        CIPHER.encrypt(
+            json.dumps(
+                    {"user_id": user_info["id"], "band": band},
+                    separators=(",", ":")
+            ).encode("utf8")
+        )
+    ).decode(encoding="utf8")

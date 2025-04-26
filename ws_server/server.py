@@ -1,7 +1,6 @@
 """
 Websocket server.
 """
-
 import logging
 import logging.config
 from logging_conf import LOGGING_CONFIG
@@ -10,6 +9,8 @@ import base64
 import json
 import binascii
 import asyncio
+import time
+from encryption import CIPHER
 from websockets import Headers, CloseCode
 from websockets.asyncio.server import serve, ServerConnection
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError, ConnectionClosed
@@ -22,12 +23,18 @@ class TicketError(BaseException):
 
 def checkTicket(headers: Headers) -> dict:
     try:
+        time_start_check_ticket = time.perf_counter()
         ticket = headers.get("sec-websocket-protocol", "").split(",")[0]
         if not ticket:
             raise TicketError("Ticket not found!")
-        ticket = json.loads(base64.b16decode(ticket).decode("utf-8"))
+        ticket = json.loads(
+            CIPHER.decrypt(
+                base64.b16decode(ticket)
+            ).decode(encoding="utf-8")
+        )
         if not ticket.get("user_id", None) and not ticket.get("band", None):
             raise TicketError("Invalid ticket!")
+        LOGGER.debug(f"checkTicket took {time.perf_counter() - time_start_check_ticket:.6f}s!")
         return ticket
     except json.decoder.JSONDecodeError:
         raise TicketError("Ticket is invalid JSON string!")
@@ -98,8 +105,8 @@ async def connect(websocket: ServerConnection):
         LOGGER.error(f"ConnectionClosedError from {websocket.remote_address}: {ex}")
     except TicketError as ex:
         close_code = CloseCode.INTERNAL_ERROR
-        close_reason = str(ex)
-        LOGGER.error(close_reason)
+        close_reason = "Invalid ticket!"
+        LOGGER.error(ex)
     finally:
         await websocket.close(close_code, close_reason)
         CONNECTIONS.remove(websocket)
