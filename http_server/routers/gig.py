@@ -15,6 +15,8 @@ async def ticket(
     user_info: dict=Depends(Authenticate(permission_level=1))
 ):
     # TODO: add to cache
+    # TODO: determine if user is allowed to join gig w/ requested
+    #       band.
     return base64.b16encode(
         CIPHER.encrypt(
             json.dumps(
