@@ -7,6 +7,9 @@ import Crypto.Cipher.AES
 import Crypto.Random
 from hashlib import pbkdf2_hmac
 
+class EncryptionError(Exception):
+    pass
+
 class AESCipher:
     def __init__(self, password: bytes, salt: bytes):
         self.aes_salt_byte_len = 16
@@ -20,29 +23,35 @@ class AESCipher:
         )
 
     def encrypt(self, message: bytes) -> bytes:
-        salt = Crypto.Random.get_random_bytes(self.aes_salt_byte_len)
-        cipher_text, tag = Crypto.Cipher.AES.new(
-            self.aes_key,
-            Crypto.Cipher.AES.MODE_GCM,
-            salt,
-            mac_len=self.aes_tag_byte_len
-        ).encrypt_and_digest(message)
-        return salt + tag + cipher_text
+        try:
+            salt = Crypto.Random.get_random_bytes(self.aes_salt_byte_len)
+            cipher_text, tag = Crypto.Cipher.AES.new(
+                self.aes_key,
+                Crypto.Cipher.AES.MODE_GCM,
+                salt,
+                mac_len=self.aes_tag_byte_len
+            ).encrypt_and_digest(message)
+            return salt + tag + cipher_text
+        except Exception as ex:
+            raise EncryptionError(ex)
 
     def decrypt(self, cipher_text: bytes) -> bytes:
         """
         Decrypts b16 encoded string and returns bytes.
         """
-        salt = cipher_text[:self.aes_salt_byte_len]
-        tag = cipher_text[self.aes_salt_byte_len:self.aes_salt_byte_len + self.aes_tag_byte_len]
-        cipher_text = cipher_text[self.aes_salt_byte_len + self.aes_tag_byte_len:]
-        message = Crypto.Cipher.AES.new(
-            self.aes_key,
-            Crypto.Cipher.AES.MODE_GCM,
-            salt,
-            mac_len=self.aes_tag_byte_len
-        ).decrypt_and_verify(cipher_text, tag)
-        return message
+        try:
+            salt = cipher_text[:self.aes_salt_byte_len]
+            tag = cipher_text[self.aes_salt_byte_len:self.aes_salt_byte_len + self.aes_tag_byte_len]
+            cipher_text = cipher_text[self.aes_salt_byte_len + self.aes_tag_byte_len:]
+            message = Crypto.Cipher.AES.new(
+                self.aes_key,
+                Crypto.Cipher.AES.MODE_GCM,
+                salt,
+                mac_len=self.aes_tag_byte_len
+            ).decrypt_and_verify(cipher_text, tag)
+            return message
+        except Exception as ex:
+            raise EncryptionError(ex)
 
 CIPHER = AESCipher(
     "password".encode(encoding="utf8"),
