@@ -15,7 +15,7 @@ LOGGING_CONFIG = {
         },
     },
     'loggers': { 
-        '__main__': {
+        'ws_server': {
             'handlers': [
                 'stderr'
             ],

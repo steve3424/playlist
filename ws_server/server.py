@@ -15,7 +15,7 @@ from websockets import Headers, CloseCode
 from websockets.asyncio.server import Server, serve, ServerConnection
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK, ConnectionClosedError
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger("ws_server")
 CONNECTIONS = {
     # "<band_name>": <set(websockets)>
 }
