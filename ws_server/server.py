@@ -94,8 +94,7 @@ async def connect(websocket: ServerConnection):
     websocket
         Handle to client-specific connection.
     """
-    
-    LOGGER.debug(f"Client {websocket.remote_address} connected!")
+    LOGGER.info(f"Connnect request from {websocket.remote_address}...")
     CONNECTIONS.add(websocket)
     close_code = 1000
     close_reason = ""
@@ -141,7 +140,8 @@ async def startServer(host: str, port: int):
 
 async def shutdown(server: serve | None):
     """
-    Shut down server.
+    Shut down server. Server may be none if exception
+    is thrown on startup.
 
     Parameters
     ----------
@@ -149,11 +149,13 @@ async def shutdown(server: serve | None):
         Server instance.
     """
     global CONNECTIONS
-    LOGGER.debug(f"Shutting down server. Closing {len(CONNECTIONS)} connections...")
     if server:
+        LOGGER.info(f"Shutting down server. Closing {len(CONNECTIONS)} connections...")
         server.close(close_connections=True)
         await server.wait_closed()
-        LOGGER.debug("Shutdown complete!")
+        LOGGER.info("Shutdown complete!")
+    else:
+        LOGGER.error("Error on server startup!")
 
 def main(host: str, port: int):
     try:
