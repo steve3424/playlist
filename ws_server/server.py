@@ -16,7 +16,9 @@ from websockets.asyncio.server import serve, ServerConnection
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError, ConnectionClosed
 
 LOGGER = logging.getLogger(__name__)
-CONNECTIONS = set()
+CONNECTIONS = {
+    # "<band_name>": <set(websockets)>
+}
 
 class TicketError(BaseException):
     pass
@@ -47,7 +49,7 @@ def checkTicket(headers: Headers) -> dict:
     except ValueError as ex:
         raise TicketError(ex) from ex
 
-async def listen(websocket: ServerConnection):
+async def listen(websocket: ServerConnection, band: str):
     """
     Awaits for messages incoming on a connection. The loop
     will terminate if a client closes the connection.
@@ -57,11 +59,13 @@ async def listen(websocket: ServerConnection):
     websocket
         Connection to single client.
     """
+    global CONNECTIONS
     async for message in websocket:
-        LOGGER.debug(f"Broadcasting message from client {websocket.remote_address} to {len(CONNECTIONS)} clients: '{message}'")
+        other_band_members = CONNECTIONS[band] - {websocket}
+        LOGGER.debug(f"Broadcasting message from client {websocket.remote_address} to {len(other_band_members)} clients: '{message}'")
 
         # TODO: analyze message.
-        for client in CONNECTIONS:
+        for client in other_band_members:
             asyncio.create_task(send(client, message))
         # TODO: maybe client specific response here.
 
@@ -94,14 +98,18 @@ async def connect(websocket: ServerConnection):
     websocket
         Handle to client-specific connection.
     """
-    LOGGER.info(f"Connnect request from {websocket.remote_address}...")
-    CONNECTIONS.add(websocket)
+    global CONNECTIONS
+    LOGGER.info(f"Connect request from {websocket.remote_address}...")
     close_code = 1000
     close_reason = ""
+    band = None
     try:
         ticket = checkTicket(websocket.request.headers)
-        # TODO: do something w/ ticket
-        await listen(websocket)
+        band = ticket["band"]
+        CONNECTIONS[band] = CONNECTIONS.get(band, set()) | {websocket}
+        LOGGER.info(f"Connected to {band}!")
+
+        await listen(websocket, band)
     except ConnectionClosedOK:
         # TODO: when is this thrown?
         LOGGER.info(f"ConnectionClosedOK sent {websocket.remote_address}!")
@@ -116,7 +124,8 @@ async def connect(websocket: ServerConnection):
         close_reason = "Invalid ticket!"
     finally:
         await websocket.close(close_code, close_reason)
-        CONNECTIONS.remove(websocket)
+        if band:
+            CONNECTIONS[band].remove(websocket)
         LOGGER.debug(f"Client {websocket.remote_address} connection closed.")
 
 async def startServer(host: str, port: int):
@@ -150,7 +159,8 @@ async def shutdown(server: serve | None):
     """
     global CONNECTIONS
     if server:
-        LOGGER.info(f"Shutting down server. Closing {len(CONNECTIONS)} connections...")
+        num_connections = sum(len(conns) for band,conns in CONNECTIONS.items())
+        LOGGER.info(f"Shutting down server. Closing {num_connections} connections...")
         server.close(close_connections=True)
         await server.wait_closed()
         LOGGER.info("Shutdown complete!")
