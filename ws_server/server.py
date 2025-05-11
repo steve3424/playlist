@@ -10,7 +10,7 @@ import json
 import binascii
 import asyncio
 import time
-from encryption import CIPHER
+from encryption import CIPHER, EncryptionError
 from websockets import Headers, CloseCode
 from websockets.asyncio.server import serve, ServerConnection
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError, ConnectionClosed
@@ -36,12 +36,14 @@ def checkTicket(headers: Headers) -> dict:
             raise TicketError("Invalid ticket!")
         LOGGER.debug(f"checkTicket took {time.perf_counter() - time_start_check_ticket:.6f}s!")
         return ticket
-    except json.decoder.JSONDecodeError:
-        raise TicketError("Ticket is invalid JSON string!")
-    except binascii.Error:
-        raise TicketError("Ticket is invalid base16 string!")
-    except UnicodeDecodeError:
-        raise TicketError("Ticket is invalid utf-8 string!")
+    except json.decoder.JSONDecodeError as ex:
+        raise TicketError("Ticket is invalid JSON string!") from ex
+    except binascii.Error as ex:
+        raise TicketError("Ticket is invalid base16 string!") from ex
+    except UnicodeDecodeError as ex:
+        raise TicketError("Ticket is invalid utf-8 string!") from ex
+    except EncryptionError as ex:
+        raise TicketError("Ticket unable to be decrypted!") from ex
 
 async def listen(websocket: ServerConnection):
     """
@@ -104,9 +106,9 @@ async def connect(websocket: ServerConnection):
     except ConnectionClosedError as ex:
         LOGGER.exception(f"ConnectionClosedError from {websocket.remote_address}: {ex}")
     except TicketError as ex:
+        LOGGER.exception(ex)
         close_code = CloseCode.INTERNAL_ERROR
         close_reason = "Invalid ticket!"
-        LOGGER.error(ex)
     finally:
         await websocket.close(close_code, close_reason)
         CONNECTIONS.remove(websocket)
