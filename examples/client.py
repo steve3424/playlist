@@ -6,6 +6,7 @@ import logging
 import logging.config
 from logging_conf import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
+import time
 import requests
 import asyncio
 import aioconsole
@@ -54,9 +55,12 @@ async def startClient(host: str, port: int, ticket: str):
             task.cancel()
 
 def getTicket(host: str, port: int, band: str) -> str:
+    LOGGER.info(f"Requesting ticket to '{band}' from '{host}'...")
+    time_start_get_ticket = time.perf_counter()
     response = requests.get(f"http://{host}:{port}/gig/ticket?band={band}")
     if response.status_code != 200:
         raise Exception(response.json())
+    LOGGER.info(f"Got ticket in {time.perf_counter() - time_start_get_ticket:.3f}s!")
     return response.json()
 
 def main(ws_host: str, ws_port: int, ticket_host: str, ticket_port: int, band: str):
