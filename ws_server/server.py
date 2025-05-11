@@ -3,14 +3,13 @@ Websocket server.
 """
 import logging
 import logging.config
-from logging_conf import LOGGING_CONFIG
+from .logging_conf import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
 import base64
 import json
-import binascii
 import asyncio
 import time
-from encryption import CIPHER
+from common.encryption import CIPHER
 from websockets import Headers, CloseCode
 from websockets.asyncio.server import Server, serve, ServerConnection
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK, ConnectionClosedError
