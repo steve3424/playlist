@@ -7,6 +7,7 @@ import logging.config
 from logging_conf import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
 import time
+import argparse
 import requests
 import asyncio
 import aioconsole
@@ -72,9 +73,17 @@ def main(ws_host: str, ws_port: int, ticket_host: str, ticket_port: int, band: s
         LOGGER.error(f"Unable to connect: {ex}")
 
 if __name__ == "__main__":
-    ws_host = "localhost"
-    ws_port = 8080
-    ticket_host = "localhost"
-    ticket_port = 80
-    band = "The Beatles"
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("--ws-host", type=str, default="localhost")
+    arg_parser.add_argument("--ws-port", type=int, default=8080)
+    arg_parser.add_argument("--ticket-host", type=str, default="localhost")
+    arg_parser.add_argument("--ticket-port", type=int, default=80)
+    arg_parser.add_argument("--band", type=str, required=True)
+    args = arg_parser.parse_args()
+
+    ws_host = args.ws_host
+    ws_port = args.ws_port
+    ticket_host = args.ticket_host
+    ticket_port = args.ticket_port
+    band = args.band
     main(ws_host, ws_port, ticket_host, ticket_port, band)
