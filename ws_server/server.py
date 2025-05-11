@@ -110,7 +110,7 @@ async def connect(websocket: ServerConnection):
         LOGGER.error(f"ConnectionClosedError {websocket.remote_address}: {ex}!")
     except TicketError as ex:
         LOGGER.exception(ex)
-        close_code = CloseCode.INTERNAL_ERROR
+        close_code = CloseCode.INVALID_DATA
         close_reason = "Invalid ticket!"
     finally:
         await websocket.close(close_code, close_reason)
