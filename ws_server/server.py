@@ -51,6 +51,8 @@ async def listen(websocket: ServerConnection, band: str):
     ----------
     websocket
         Connection to single client.
+    band
+        Name of the band to connect to.
     """
     global CONNECTIONS
     async for message in websocket:
