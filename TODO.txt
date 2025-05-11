@@ -3,3 +3,5 @@
 - change connections to be per band
 - implement app/band auth in http_server
 - make encryption code common
+- trace logging
+- add timings everywhere
