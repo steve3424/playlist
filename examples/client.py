@@ -11,7 +11,7 @@ import argparse
 import requests
 import asyncio
 import aioconsole
-from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError, ConnectionClosed
+from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 from websockets.asyncio.client import connect, ClientConnection
 
 LOGGER = logging.getLogger(__name__)
@@ -23,11 +23,11 @@ async def wsListener(websocket: ClientConnection):
             incoming_msg = await websocket.recv()
             LOGGER.info(f"Received message '{incoming_msg}' from {websocket.remote_address}!")
     except ConnectionClosedOK as ex:
+        # NOTE: Called when server initiates graceful shutdown
         LOGGER.info(f"ConnectionClosedOk from server: {ex}")
     except ConnectionClosedError as ex:
+        # NOTE: Called when server quits unexpectedly
         LOGGER.error(f"ConnectionClosedError from server: {ex}")
-    except ConnectionClosed as ex:
-        LOGGER.error(f"ConnectionClosed from server: {ex}")
 
 async def inputListener(websocket: ClientConnection):
     LOGGER.info("Listening to console for messages...")

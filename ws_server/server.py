@@ -92,7 +92,7 @@ async def connect(websocket: ServerConnection):
         Handle to client-specific connection.
     """
     global CONNECTIONS
-    LOGGER.info(f"Connect request from {websocket.remote_address}...")
+    LOGGER.info(f"Connection request from {websocket.remote_address}...")
     close_code = 1000
     close_reason = ""
     band = None
@@ -106,8 +106,8 @@ async def connect(websocket: ServerConnection):
         # TODO: when is this thrown?
         LOGGER.info(f"ConnectionClosedOK {websocket.remote_address}: {ex}!")
     except ConnectionClosedError as ex:
-        # TODO: when is this thrown?
-        LOGGER.exception(f"ConnectionClosedError {websocket.remote_address}: {ex}!")
+        # NOTE: Called when client dies unexpectedly
+        LOGGER.error(f"ConnectionClosedError {websocket.remote_address}: {ex}!")
     except TicketError as ex:
         LOGGER.exception(ex)
         close_code = CloseCode.INTERNAL_ERROR
