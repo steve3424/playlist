@@ -1,4 +1,4 @@
-- fully implement ticketing system
+- implement ticket cache, expiry time
 - implement app/band auth in http_server
 - make encryption code common
 - trace logging
