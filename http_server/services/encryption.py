@@ -33,7 +33,7 @@ class AESCipher:
             ).encrypt_and_digest(message)
             return salt + tag + cipher_text
         except Exception as ex:
-            raise EncryptionError(ex)
+            raise EncryptionError(ex) from ex
 
     def decrypt(self, cipher_text: bytes) -> bytes:
         """
@@ -51,7 +51,7 @@ class AESCipher:
             ).decrypt_and_verify(cipher_text, tag)
             return message
         except Exception as ex:
-            raise EncryptionError(ex)
+            raise EncryptionError(ex) from ex
 
 CIPHER = AESCipher(
     "password".encode(encoding="utf8"),
