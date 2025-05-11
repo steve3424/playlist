@@ -12,8 +12,8 @@ import asyncio
 import time
 from encryption import CIPHER
 from websockets import Headers, CloseCode
-from websockets.asyncio.server import serve, ServerConnection
-from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError, ConnectionClosed
+from websockets.asyncio.server import Server, serve, ServerConnection
+from websockets.exceptions import ConnectionClosed, ConnectionClosedOK, ConnectionClosedError
 
 LOGGER = logging.getLogger(__name__)
 CONNECTIONS = {
@@ -77,8 +77,10 @@ async def send(websocket: ServerConnection, message: str):
     try:
         await websocket.send(message)
         LOGGER.info(f"Client {websocket.remote_address} sent message!")
+    except ConnectionClosed as ex:
+        LOGGER.exception(f"ConnectionClosed while sending to {websocket.remote_address}: {ex}")
     except Exception as ex:
-        LOGGER.exception(f"Exception while sending to {websocket.remote_address}: {ex}")
+        LOGGER.exception(f"Error while sending to {websocket.remote_address}: {ex}")
 
 async def connect(websocket: ServerConnection):
     """
@@ -100,14 +102,12 @@ async def connect(websocket: ServerConnection):
         CONNECTIONS[band] = CONNECTIONS.get(band, set()) | {websocket}
         LOGGER.info(f"Connected to {band}!")
         await listen(websocket, band)
-    except ConnectionClosedOK:
+    except ConnectionClosedOK as ex:
         # TODO: when is this thrown?
-        LOGGER.info(f"ConnectionClosedOK sent {websocket.remote_address}!")
+        LOGGER.info(f"ConnectionClosedOK {websocket.remote_address}: {ex}!")
     except ConnectionClosedError as ex:
         # TODO: when is this thrown?
-        LOGGER.exception(f"ConnectionClosedError from {websocket.remote_address}: {ex}")
-        close_code = CloseCode.INTERNAL_ERROR
-        close_reason = "Unknown"
+        LOGGER.exception(f"ConnectionClosedError {websocket.remote_address}: {ex}!")
     except TicketError as ex:
         LOGGER.exception(ex)
         close_code = CloseCode.INTERNAL_ERROR
@@ -139,7 +139,7 @@ async def startServer(host: str, port: int):
     finally:
         await shutdown(server)
 
-async def shutdown(server: serve | None):
+async def shutdown(server: Server | None):
     """
     Shut down server. Server may be none if exception
     is thrown on startup.
