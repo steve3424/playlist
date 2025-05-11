@@ -26,7 +26,7 @@ def checkTicket(headers: Headers) -> dict:
         time_start_check_ticket = time.perf_counter()
         ticket = headers.get("sec-websocket-protocol", "").split(",")[0]
         if not ticket:
-            raise TicketError("Ticket not found!")
+            raise ValueError("Ticket not found!")
         ticket = json.loads(
             CIPHER.decrypt(
                 base64.b16decode(ticket)
@@ -44,6 +44,8 @@ def checkTicket(headers: Headers) -> dict:
         raise TicketError("Ticket is invalid utf-8 string!") from ex
     except EncryptionError as ex:
         raise TicketError("Ticket unable to be decrypted!") from ex
+    except ValueError as ex:
+        raise TicketError(ex) from ex
 
 async def listen(websocket: ServerConnection):
     """
