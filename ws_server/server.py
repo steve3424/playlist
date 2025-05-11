@@ -77,9 +77,9 @@ async def send(websocket: ServerConnection, message: str):
         await websocket.send(message)
         LOGGER.info(f"Client {websocket.remote_address} sent message!")
     except ConnectionClosed as ex:
-        LOGGER.error(f"ConnectionClosed while sending to {websocket.remote_address}: {ex}")
+        LOGGER.exception(f"ConnectionClosed while sending to {websocket.remote_address}: {ex}")
     except Exception as ex:
-        LOGGER.error(f"Exception while sending to {websocket.remote_address}: {ex}")
+        LOGGER.exception(f"Exception while sending to {websocket.remote_address}: {ex}")
 
 async def connect(websocket: ServerConnection):
     """
