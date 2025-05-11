@@ -6,7 +6,7 @@ import logging.config
 from .logging_conf import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
 import base64
-import json
+import argparse
 import asyncio
 import time
 from common.encryption import CIPHER
@@ -166,4 +166,9 @@ def main(host: str, port: int):
         LOGGER.debug("ctrl+c stopped server!")
 
 if __name__ == "__main__":
-    main("0.0.0.0", 8080)
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("--host", type=str, default="0.0.0.0")
+    arg_parser.add_argument("--port", type=int, default=8080)
+    args = arg_parser.parse_args()
+
+    main(args.host, args.port)
