@@ -144,6 +144,8 @@ async def startServer(host: str, port: int):
         server = await serve(connect, host, port)
         # Run forever
         await asyncio.Future()
+    except Exception as ex:
+        LOGGER.exception(f"Startup error: {ex}")
     finally:
         await shutdown(server)
 
