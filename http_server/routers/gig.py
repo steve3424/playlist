@@ -2,8 +2,8 @@ import logging
 import base64
 import json
 from fastapi import APIRouter, Depends
-from middlewares.auth import Authenticate
-from services.encryption import CIPHER
+from ..middlewares.auth import Authenticate
+from common.encryption import CIPHER
 
 LOGGER = logging.getLogger(f"__main__.{__name__}")
 

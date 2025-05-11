@@ -3,11 +3,11 @@ Websocket server.
 """
 import logging
 import logging.config
-from logging_conf import LOGGING_CONFIG
+from .logging_conf import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
 import fastapi
 import uvicorn
-from routers import gig
+from .routers import gig
 
 app = fastapi.FastAPI()
 app.include_router(gig.router)

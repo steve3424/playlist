@@ -1,6 +1,5 @@
 - implement ticket cache, expiry time
 - implement app/band auth in http_server
-- make encryption code common
 - trace logging
 - add timings everywhere
 - make client sample actually have playlist
