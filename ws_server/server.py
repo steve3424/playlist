@@ -10,7 +10,7 @@ import json
 import binascii
 import asyncio
 import time
-from encryption import CIPHER, EncryptionError
+from encryption import CIPHER
 from websockets import Headers, CloseCode
 from websockets.asyncio.server import serve, ServerConnection
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError, ConnectionClosed
@@ -38,15 +38,8 @@ def checkTicket(headers: Headers) -> dict:
             raise TicketError("Invalid ticket!")
         LOGGER.debug(f"checkTicket took {time.perf_counter() - time_start_check_ticket:.6f}s!")
         return ticket
-    except json.decoder.JSONDecodeError as ex:
-        raise TicketError("Ticket is invalid JSON string!") from ex
-    except binascii.Error as ex:
-        raise TicketError("Ticket is invalid base16 string!") from ex
-    except UnicodeDecodeError as ex:
-        raise TicketError("Ticket is invalid utf-8 string!") from ex
-    except EncryptionError as ex:
-        raise TicketError("Ticket unable to be decrypted!") from ex
-    except ValueError as ex:
+    except Exception as ex:
+        LOGGER.error(f"Headers: '{headers}'")
         raise TicketError(ex) from ex
 
 async def listen(websocket: ServerConnection, band: str):
@@ -84,8 +77,6 @@ async def send(websocket: ServerConnection, message: str):
     try:
         await websocket.send(message)
         LOGGER.info(f"Client {websocket.remote_address} sent message!")
-    except ConnectionClosed as ex:
-        LOGGER.exception(f"ConnectionClosed while sending to {websocket.remote_address}: {ex}")
     except Exception as ex:
         LOGGER.exception(f"Exception while sending to {websocket.remote_address}: {ex}")
 
@@ -108,7 +99,6 @@ async def connect(websocket: ServerConnection):
         band = ticket["band"]
         CONNECTIONS[band] = CONNECTIONS.get(band, set()) | {websocket}
         LOGGER.info(f"Connected to {band}!")
-
         await listen(websocket, band)
     except ConnectionClosedOK:
         # TODO: when is this thrown?
