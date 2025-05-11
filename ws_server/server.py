@@ -102,9 +102,13 @@ async def connect(websocket: ServerConnection):
         # TODO: do something w/ ticket
         await listen(websocket)
     except ConnectionClosedOK:
+        # TODO: when is this thrown?
         LOGGER.info(f"ConnectionClosedOK sent {websocket.remote_address}!")
     except ConnectionClosedError as ex:
+        # TODO: when is this thrown?
         LOGGER.exception(f"ConnectionClosedError from {websocket.remote_address}: {ex}")
+        close_code = CloseCode.INTERNAL_ERROR
+        close_reason = "Unknown"
     except TicketError as ex:
         LOGGER.exception(ex)
         close_code = CloseCode.INTERNAL_ERROR
