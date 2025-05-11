@@ -10,6 +10,7 @@ import json
 import asyncio
 import time
 from common.encryption import CIPHER
+from common.tickets import Ticket
 from websockets import Headers, CloseCode
 from websockets.asyncio.server import Server, serve, ServerConnection
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK, ConnectionClosedError
@@ -22,18 +23,18 @@ CONNECTIONS = {
 class TicketError(BaseException):
     pass
 
-def checkTicket(headers: Headers) -> dict:
+def checkTicket(headers: Headers) -> Ticket:
     try:
         time_start_check_ticket = time.perf_counter()
         ticket = headers.get("sec-websocket-protocol", "").split(",")[0]
         if not ticket:
             raise ValueError("Ticket not found!")
-        ticket = json.loads(
+        ticket = Ticket.model_validate_json(
             CIPHER.decrypt(
                 base64.b16decode(ticket)
             ).decode(encoding="utf-8")
         )
-        if not ticket.get("user_id", None) and not ticket.get("band", None):
+        if not ticket.user_id and not ticket.band:
             raise TicketError("Invalid ticket!")
         LOGGER.debug(f"checkTicket took {time.perf_counter() - time_start_check_ticket:.6f}s!")
         return ticket
@@ -97,7 +98,7 @@ async def connect(websocket: ServerConnection):
     band = None
     try:
         ticket = checkTicket(websocket.request.headers)
-        band = ticket["band"]
+        band = ticket.band
         CONNECTIONS[band] = CONNECTIONS.get(band, set()) | {websocket}
         LOGGER.info(f"Connected to {band}!")
         await listen(websocket, band)
