@@ -1,6 +1,4 @@
-- confirm exception handling on server side is clean/robust
 - fully implement ticketing system
-- change connections to be per band
 - implement app/band auth in http_server
 - make encryption code common
 - trace logging
