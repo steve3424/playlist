@@ -5,3 +5,4 @@
 - make encryption code common
 - trace logging
 - add timings everywhere
+- make client sample actually have playlist
