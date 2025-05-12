@@ -1,4 +1,3 @@
-- trace logging
 - implement ticket cache, expiry time
 - implement app/band auth in http_server
 - add timings everywhere

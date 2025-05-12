@@ -3,6 +3,7 @@ Websocket server.
 """
 import logging
 import logging.config
+from . import logging_conf
 from .logging_conf import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
 import base64
@@ -36,7 +37,7 @@ def checkTicket(headers: Headers) -> Ticket:
         )
         if not ticket.user_id and not ticket.band:
             raise TicketError("Invalid ticket!")
-        LOGGER.debug(f"checkTicket took {time.perf_counter() - time_start_check_ticket:.6f}s!")
+        LOGGER.debug(f"Ticket validated in {time.perf_counter() - time_start_check_ticket:.6f}s!")
         return ticket
     except Exception as ex:
         LOGGER.error(f"Headers: '{headers}'")
@@ -57,7 +58,7 @@ async def listen(websocket: ServerConnection, band: str):
     global CONNECTIONS
     async for message in websocket:
         other_band_members = CONNECTIONS[band] - {websocket}
-        LOGGER.debug(f"Broadcasting message from client {websocket.remote_address} to {len(other_band_members)} clients: '{message}'")
+        LOGGER.debug(f"Broadcasting to {len(other_band_members)} clients...")
 
         # TODO: analyze message.
         for client in other_band_members:
@@ -78,7 +79,7 @@ async def send(websocket: ServerConnection, message: str):
     """
     try:
         await websocket.send(message)
-        LOGGER.info(f"Client {websocket.remote_address} sent message!")
+        LOGGER.debug(f"Message sent to {websocket.remote_address[0]}:{websocket.remote_address[1]}!")
     except ConnectionClosed as ex:
         LOGGER.exception(f"ConnectionClosed while sending to {websocket.remote_address}: {ex}")
     except Exception as ex:
@@ -94,22 +95,27 @@ async def connect(websocket: ServerConnection):
         Handle to client-specific connection.
     """
     global CONNECTIONS
-    LOGGER.info(f"Connection request from {websocket.remote_address}...")
+    logging_conf.IP_PORT.set(f"{websocket.remote_address[0]}:{websocket.remote_address[1]}")
+
+    LOGGER.info("Connecting...")
     close_code = 1000
     close_reason = ""
     band = None
     try:
         ticket = checkTicket(websocket.request.headers)
         band = ticket.band
-        CONNECTIONS[band] = CONNECTIONS.get(band, set()) | {websocket}
-        LOGGER.info(f"Connected to {band}!")
-        await listen(websocket, band)
+
+        logging_conf.USER_ID.set(ticket.user_id)
+        logging_conf.BAND.set(ticket.band)
+        CONNECTIONS[ticket.band] = CONNECTIONS.get(ticket.band, set()) | {websocket}
+        LOGGER.info("Connected!")
+        await listen(websocket, ticket.band)
     except ConnectionClosedOK as ex:
         # TODO: when is this thrown?
-        LOGGER.info(f"ConnectionClosedOK {websocket.remote_address}: {ex}!")
+        LOGGER.info(f"ConnectionClosedOK: {ex}!")
     except ConnectionClosedError as ex:
         # NOTE: Called when client dies unexpectedly
-        LOGGER.error(f"ConnectionClosedError {websocket.remote_address}: {ex}!")
+        LOGGER.error(f"ConnectionClosedError: {ex}!")
     except TicketError as ex:
         LOGGER.exception(ex)
         close_code = CloseCode.INVALID_DATA
@@ -117,8 +123,8 @@ async def connect(websocket: ServerConnection):
     finally:
         await websocket.close(close_code, close_reason)
         if band:
-            CONNECTIONS[band].remove(websocket)
-        LOGGER.debug(f"Client {websocket.remote_address} connection closed.")
+            CONNECTIONS[ticket.band].remove(websocket)
+        LOGGER.debug("Connection closed!")
 
 async def startServer(host: str, port: int):
     """
