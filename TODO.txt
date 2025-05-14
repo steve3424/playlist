@@ -1,4 +1,7 @@
 - implement ticket cache, expiry time
+    - redis error handling
+    - shutdown code event loop error
+    - time ticket creation
 - implement app/band auth in http_server
 - add timings everywhere
 - make client sample actually have playlist
