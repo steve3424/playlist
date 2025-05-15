@@ -9,16 +9,23 @@ import argparse
 import asyncio
 import fastapi
 import uvicorn
+from contextlib import asynccontextmanager
 from .routers import gig
 from .services import redis_service
 
-app = fastapi.FastAPI()
-app.include_router(gig.router)
+LOGGER = logging.getLogger(__name__)
 
-@app.get("/health")
+@asynccontextmanager
+async def appLife(app: fastapi.FastAPI, *args, **kwargs):
+    LOGGER.info("Starting server...")
+    redis_service.init(kwargs["redis_host"], kwargs["redis_port"])
+    yield
+    LOGGER.info("Shutting down server...")
+    await redis_service.shutdown()
+
 def health() -> dict:
     return {"detail": "healthy"}
-
+    
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--host", type=str, default="0.0.0.0")
@@ -27,10 +34,14 @@ if __name__ == "__main__":
     arg_parser.add_argument("--redis-port", type=int, default=6379)
     args = arg_parser.parse_args()
 
-    # Startup code
-    redis_service.init(args.redis_host, args.redis_port)
+    app = fastapi.FastAPI(
+        lifespan=lambda app: appLife(
+            app,
+            redis_host=args.redis_host,
+            redis_port=args.redis_port,
+        )
+    )
+    app.include_router(gig.router)
+    app.add_api_route("/health", health)
 
     uvicorn.run(app, host=args.host, port=args.port)
-
-    # Shutdown code
-    asyncio.run(redis_service.shutdown())
