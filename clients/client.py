@@ -58,7 +58,7 @@ async def startClient(host: str, port: int, ticket: str):
 def getTicket(host: str, port: int, band: str) -> str:
     LOGGER.info(f"Requesting ticket to '{band}' from '{host}'...")
     time_start_get_ticket = time.perf_counter()
-    response = requests.get(f"http://{host}:{port}/gig/ticket?band={band}")
+    response = requests.get(f"http://{host}:{port}/band/gig?band={band}")
     if response.status_code != 200:
         raise Exception(response.json())
     LOGGER.info(f"Got ticket in {time.perf_counter() - time_start_get_ticket:.3f}s!")
