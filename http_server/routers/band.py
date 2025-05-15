@@ -11,14 +11,14 @@ TICKET_TTL = 5 # seconds
 
 router = APIRouter(prefix="/gig")
 
-@router.get("/ticket")
-async def ticket(
+@router.get("/gig")
+async def gig(
     band: str,
     user_info: dict=Depends(Authenticate(permission_level=1))
 ):
     global TICKET_TTL
-    # TODO: determine if user is allowed to join gig w/ requested
-    #       band.
+
+    # TODO: determine if user is allowed to join gig w/ requested band.
     ticket = Ticket(
         user_id=user_info["id"],
         band=band

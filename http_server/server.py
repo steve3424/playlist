@@ -9,7 +9,7 @@ import argparse
 import fastapi
 import uvicorn
 from contextlib import asynccontextmanager
-from .routers import gig
+from .routers import band
 from .services import redis_service
 
 LOGGER = logging.getLogger("playlist")
@@ -40,7 +40,7 @@ if __name__ == "__main__":
             redis_port=args.redis_port,
         )
     )
-    app.include_router(gig.router)
+    app.include_router(band.router)
     app.add_api_route("/health", health)
 
     uvicorn.run(app, host=args.host, port=args.port)
