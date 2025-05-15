@@ -10,6 +10,7 @@ import base64
 import argparse
 import asyncio
 import time
+import redis.asyncio as redis
 from common.encryption import CIPHER
 from common.tickets import Ticket
 from websockets import Headers, CloseCode
@@ -17,6 +18,7 @@ from websockets.asyncio.server import Server, serve, ServerConnection
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK, ConnectionClosedError
 
 LOGGER = logging.getLogger("ws_server")
+REDIS_CLIENT: redis.Redis = None
 CONNECTIONS = {
     # "<band_name>": <set(websockets)>
 }
@@ -126,9 +128,9 @@ async def connect(websocket: ServerConnection):
             CONNECTIONS[ticket.band].remove(websocket)
         LOGGER.debug("Connection closed!")
 
-async def startServer(host: str, port: int):
+async def startServer(host: str, port: int, redis_host: str, redis_port: int):
     """
-    Starts the websocket server.
+    Starts the websocket server and redis client.
 
     Parameters
     ----------
@@ -136,9 +138,14 @@ async def startServer(host: str, port: int):
         Hostname to listen on.
     port
         Port to listen on.
+    redis_host
+        Redis hostname to connect to.
+    redis_port
+        Redis port to connect to.
     """
     server = None
     try:
+        redisInit(redis_host, redis_port)
         server = await serve(connect, host, port)
         # Run forever
         await asyncio.Future()
@@ -146,6 +153,7 @@ async def startServer(host: str, port: int):
         LOGGER.exception(f"Startup error: {ex}")
     finally:
         await shutdown(server)
+        await redisShutdown()
 
 async def shutdown(server: Server | None):
     """
@@ -167,9 +175,26 @@ async def shutdown(server: Server | None):
     else:
         LOGGER.error("Error on server startup!")
 
-def main(host: str, port: int):
+def redisInit(host: str, port: int):
+    global REDIS_CLIENT
+    if not REDIS_CLIENT:
+        LOGGER.info(f"Starting redis client on '{host}:{port}'...")
+        REDIS_CLIENT = redis.Redis(
+            host=host,
+            port=port,
+            decode_responses=True,
+        )
+
+async def redisShutdown():
+    global REDIS_CLIENT
+    LOGGER.info("Killing redis client...")
+    if REDIS_CLIENT:
+        await REDIS_CLIENT.close()
+        REDIS_CLIENT = None
+
+def main(host: str, port: int, redis_host: str, redis_port: int):
     try:
-        asyncio.run(startServer(host, port))
+        asyncio.run(startServer(host, port, redis_host, redis_port))
     except KeyboardInterrupt:
         LOGGER.debug("ctrl+c stopped server!")
 
@@ -177,6 +202,8 @@ if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--host", type=str, default="0.0.0.0")
     arg_parser.add_argument("--port", type=int, default=8080)
+    arg_parser.add_argument("--redis-host", type=str, default="localhost")
+    arg_parser.add_argument("--redis-port", type=int, default=6379)
     args = arg_parser.parse_args()
 
-    main(args.host, args.port)
+    main(args.host, args.port, args.redis_host, args.redis_port)
