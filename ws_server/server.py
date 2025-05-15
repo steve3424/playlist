@@ -27,12 +27,13 @@ TICKET_HEADER_NAME = "sec-websocket-protocol"
 class TicketError(BaseException):
     pass
 
-def checkTicket(headers: Headers) -> Ticket:
+async def checkTicket(headers: Headers) -> Ticket:
+    global REDIS_CLIENT
     global TICKET_HEADER_NAME
     try:
         time_start_check_ticket = time.perf_counter()
-        header_val = headers.get(TICKET_HEADER_NAME, "")
-        ticket = header_val.split(",")[0]
+        ticket_enc = headers.get(TICKET_HEADER_NAME, "")
+        ticket = ticket_enc.split(",")[0]
         if not ticket:
             raise ValueError("Ticket not found!")
         ticket = Ticket.model_validate_json(
@@ -40,10 +41,16 @@ def checkTicket(headers: Headers) -> Ticket:
                 base64.b16decode(ticket)
             ).decode(encoding="utf-8")
         )
+        cached_ticket = await REDIS_CLIENT.get(str(ticket))
+        if not cached_ticket:
+            raise Exception("Ticket not found!")
+        elif ticket_enc != cached_ticket:
+            raise Exception(f"Ticket does not match '{cached_ticket}'!")
+
         LOGGER.debug(f"Ticket validated in {time.perf_counter() - time_start_check_ticket:.6f}s!")
         return ticket
     except Exception as ex:
-        LOGGER.error(f"{TICKET_HEADER_NAME}: '{header_val}'")
+        LOGGER.error(f"{TICKET_HEADER_NAME}: '{ticket_enc}'")
         raise TicketError(ex) from ex
 
 async def listen(websocket: ServerConnection, band: str):
@@ -105,7 +112,7 @@ async def connect(websocket: ServerConnection):
     close_reason = ""
     band = None
     try:
-        ticket = checkTicket(websocket.request.headers)
+        ticket = await checkTicket(websocket.request.headers)
         band = ticket.band
 
         logging_conf.USER_ID.set(ticket.user_id)
