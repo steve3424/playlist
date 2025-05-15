@@ -41,8 +41,10 @@ async def inputListener(websocket: ClientConnection):
         LOGGER.info("EOFError stopping input listener...")
 
 async def startClient(host: str, port: int, ticket: str):
-    async with connect(f"ws://{host}:{port}", additional_headers={"sec-websocket-protocol": ticket}) as websocket:
-        LOGGER.info(f"Connected to {host}:{port} on local port {websocket.local_address[1]}!")
+    url = f"ws://{host}:{port}"
+    LOGGER.info(f"Connecting to '{url}'...")
+    async with connect(url, additional_headers={"sec-websocket-protocol": ticket}) as websocket:
+        LOGGER.info(f"Connected from '{websocket.local_address[0]}:{websocket.local_address[1]}'!")
         in_task = asyncio.create_task(inputListener(websocket))
         rec_task = asyncio.create_task(wsListener(websocket))
         _, pending = await asyncio.wait(
@@ -56,9 +58,10 @@ async def startClient(host: str, port: int, ticket: str):
             task.cancel()
 
 def getTicket(host: str, port: int, band: str) -> str:
-    LOGGER.info(f"Requesting ticket to '{band}' from '{host}'...")
+    url = f"http://{host}:{port}/band/gig?band={band}"
+    LOGGER.info(f"Requesting ticket from '{url}'...")
     time_start_get_ticket = time.perf_counter()
-    response = requests.get(f"http://{host}:{port}/band/gig?band={band}")
+    response = requests.get(url, timeout=10)
     if response.status_code != 200:
         raise Exception(response.json())
     LOGGER.info(f"Got ticket in {time.perf_counter() - time_start_get_ticket:.3f}s!")
