@@ -22,13 +22,15 @@ async def gig(
     ticket = Ticket(
         user_id=user_info["id"],
         band=band
-    ).model_dump_json().encode("utf-8")
-
-    await redis_service.client.set(f"{band}:{user_info['id']}", ticket)
-    await redis_service.client.expire(f"{band}:{user_info['id']}", TICKET_TTL)
-
-    return base64.b16encode(
+    )
+    ticket_key = str(ticket)
+    ticket_enc = base64.b16encode(
         CIPHER.encrypt(
-            ticket
+            ticket.model_dump_json().encode("utf-8")
         )
-    ).decode(encoding="utf8")
+    ).decode(encoding="utf-8")
+
+    await redis_service.client.set(ticket_key, ticket_enc)
+    await redis_service.client.expire(ticket_key, TICKET_TTL)
+
+    return ticket_enc
