@@ -22,14 +22,17 @@ REDIS_CLIENT: redis.Redis = None
 CONNECTIONS = {
     # "<band_name>": <set(websockets)>
 }
+TICKET_HEADER_NAME = "sec-websocket-protocol"
 
 class TicketError(BaseException):
     pass
 
 def checkTicket(headers: Headers) -> Ticket:
+    global TICKET_HEADER_NAME
     try:
         time_start_check_ticket = time.perf_counter()
-        ticket = headers.get("sec-websocket-protocol", "").split(",")[0]
+        header_val = headers.get(TICKET_HEADER_NAME, "")
+        ticket = header_val.split(",")[0]
         if not ticket:
             raise ValueError("Ticket not found!")
         ticket = Ticket.model_validate_json(
@@ -42,7 +45,7 @@ def checkTicket(headers: Headers) -> Ticket:
         LOGGER.debug(f"Ticket validated in {time.perf_counter() - time_start_check_ticket:.6f}s!")
         return ticket
     except Exception as ex:
-        LOGGER.error(f"Headers: '{headers}'")
+        LOGGER.error(f"{TICKET_HEADER_NAME}: '{header_val}'")
         raise TicketError(ex) from ex
 
 async def listen(websocket: ServerConnection, band: str):
