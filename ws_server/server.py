@@ -189,7 +189,7 @@ async def redisShutdown():
     global REDIS_CLIENT
     LOGGER.info("Killing redis client...")
     if REDIS_CLIENT:
-        await REDIS_CLIENT.close()
+        await REDIS_CLIENT.aclose()
         REDIS_CLIENT = None
 
 def main(host: str, port: int, redis_host: str, redis_port: int):

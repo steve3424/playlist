@@ -23,7 +23,7 @@ async def shutdown() -> None:
     global client
     if client:
         LOGGER.info("Killing redis client...")
-        await client.close()
+        await client.aclose()
         client = None
 
 async def addKey(key: str, val: str, ttl: int):
