@@ -40,8 +40,6 @@ def checkTicket(headers: Headers) -> Ticket:
                 base64.b16decode(ticket)
             ).decode(encoding="utf-8")
         )
-        if not ticket.user_id and not ticket.band:
-            raise TicketError("Invalid ticket!")
         LOGGER.debug(f"Ticket validated in {time.perf_counter() - time_start_check_ticket:.6f}s!")
         return ticket
     except Exception as ex:
