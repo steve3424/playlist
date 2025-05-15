@@ -115,8 +115,8 @@ async def connect(websocket: ServerConnection):
         ticket = await checkTicket(websocket.request.headers)
         band = ticket.band
 
-        logging_conf.USER_ID.set(ticket.user_id)
         logging_conf.BAND.set(ticket.band)
+        logging_conf.USER_ID.set(ticket.user_id)
         CONNECTIONS[ticket.band] = CONNECTIONS.get(ticket.band, set()) | {websocket}
         LOGGER.info("Connected!")
         await listen(websocket, ticket.band)
