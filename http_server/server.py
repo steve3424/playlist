@@ -6,14 +6,13 @@ import logging.config
 from .logging_conf import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
 import argparse
-import asyncio
 import fastapi
 import uvicorn
 from contextlib import asynccontextmanager
 from .routers import gig
 from .services import redis_service
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger("playlist")
 
 @asynccontextmanager
 async def appLife(app: fastapi.FastAPI, *args, **kwargs):

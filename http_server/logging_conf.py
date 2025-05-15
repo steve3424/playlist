@@ -15,7 +15,7 @@ LOGGING_CONFIG = {
         },
     },
     'loggers': { 
-        '__main__': {
+        'playlist': {
             'handlers': [
                 'stderr'
             ],

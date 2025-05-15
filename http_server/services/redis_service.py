@@ -3,7 +3,7 @@ import redis.asyncio as redis
 
 client: redis.Redis = None
 
-LOGGER = logging.getLogger(f"__main__.{__name__}")
+LOGGER = logging.getLogger(f"playlist.{__name__}")
 
 def init(host: str, port: int) -> None:
     # TODO: should use TLS if going over network.
@@ -15,11 +15,9 @@ def init(host: str, port: int) -> None:
             port=port,
             decode_responses=True,
         )
-        LOGGER.info("Done!")
 
 async def shutdown() -> None:
     global client
     if client:
         LOGGER.info("Killing redis client...")
         await client.close()
-        LOGGER.info("Dead!")

@@ -6,7 +6,7 @@ from ..services import redis_service
 from common.encryption import CIPHER
 from common.tickets import Ticket
 
-LOGGER = logging.getLogger(f"__main__.{__name__}")
+LOGGER = logging.getLogger(f"playlist.{__name__}")
 TICKET_TTL = 5 # seconds
 
 router = APIRouter(prefix="/gig")
