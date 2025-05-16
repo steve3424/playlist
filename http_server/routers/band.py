@@ -1,5 +1,6 @@
 import logging
 import base64
+import time
 from fastapi import APIRouter, Depends, HTTPException
 from ..middlewares.auth import Authenticate
 from ..services import redis_service
@@ -19,6 +20,7 @@ async def gig(
     global TICKET_TTL
 
     try:
+        time_gig_start = time.perf_counter()
         # TODO: determine if user is allowed to join gig w/ requested band.
         ticket = Ticket(
             user_id=user_info["id"],
@@ -33,6 +35,7 @@ async def gig(
 
         await redis_service.addKey(ticket_key, ticket_enc, TICKET_TTL)
 
+        LOGGER.info(f"Ticket took {time.perf_counter() - time_gig_start}s!")
         return ticket_enc
     except redis_service.RedisError as ex:
         LOGGER.exception(ex)
