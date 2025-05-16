@@ -1,4 +1,5 @@
-- implement app/band auth in http_server
+- enable environment loading
+- implement signup/login/auth in http_server
 - add timings everywhere
 - make client sample actually have playlist
 - handle different message types in ws server
