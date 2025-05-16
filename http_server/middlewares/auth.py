@@ -2,7 +2,7 @@ import logging
 from typing import Annotated
 from fastapi import Header, HTTPException, Cookie
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger("playlist")
 
 # TODO: finalize permission model and actually do auth
 class Authenticate:
