@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import Annotated
 from fastapi import Header, HTTPException, Cookie
 
@@ -14,6 +15,7 @@ class Authenticate:
         authorization_header: Annotated[str, Header()]=None,
         authorization_cookie: Annotated[str|None, Cookie()]=None
     ) -> dict:
+        time_auth_start = time.perf_counter()
         if authorization_header:
             LOGGER.debug("authorization_header header found!")
             # user_info = self.validateToken(authorization_header)
@@ -24,4 +26,5 @@ class Authenticate:
             pass
             # raise HTTPException(status_code=401, detail="Unauthorized")
         # return user_info
+        LOGGER.info(f"Auth took {time.perf_counter() - time_auth_start}s!")
         return {"id": "abcde"}
