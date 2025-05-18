@@ -19,7 +19,7 @@ async def ticket(
         time_ticket_start = time.perf_counter()
         # TODO: determine if user is allowed to have ticket for requested band.
         ticket = await getTicket(user_info["name"], band)
-        LOGGER.info(f"{request.method} took {time.perf_counter() - time_ticket_start}s!")
+        LOGGER.info(f"{request.url.path} took {time.perf_counter() - time_ticket_start}s!")
         return ticket
     except TicketError as ex:
         LOGGER.exception(ex)
