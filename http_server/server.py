@@ -28,7 +28,7 @@ async def appLife(app: fastapi.FastAPI, *args, **kwargs):
     env_loaded = load_dotenv(dotenv_path=env_file_path)
     if not env_loaded:
         LOGGER.warning("Failed to load environment file!")
-    tickets.init(kwargs["redis_host"], kwargs["redis_port"])
+    await tickets.init(kwargs["redis_host"], kwargs["redis_port"])
 
     yield
 
@@ -55,7 +55,7 @@ if __name__ == "__main__":
             environment=args.environment
         )
     )
-    app.add_exception_handler(exception.ExceptionHandlerGeneral)
+    app.add_middleware(exception.ExceptionHandlerGeneral)
     app.add_api_route("/health", health)
     app.include_router(band.router)
 
