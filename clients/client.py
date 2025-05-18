@@ -58,7 +58,7 @@ async def startClient(host: str, port: int, ticket: str):
             task.cancel()
 
 def getTicket(host: str, port: int, band: str) -> str:
-    url = f"http://{host}:{port}/band/gig?band={band}"
+    url = f"http://{host}:{port}/band/ticket?band={band}"
     LOGGER.info(f"Requesting ticket from '{url}'...")
     time_start_get_ticket = time.perf_counter()
     response = requests.get(url, timeout=10)
