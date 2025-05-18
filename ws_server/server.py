@@ -17,9 +17,15 @@ from websockets.exceptions import ConnectionClosed, ConnectionClosedOK, Connecti
 
 LOGGER = logging.getLogger("ws_server")
 CONNECTIONS = {
-    # "<band_name>": <set(websockets)>
+    # "<band_name>": set(websocket)
 }
+USERS = set(
+    # <user_name>
+)
 TICKET_HEADER_NAME = "sec-websocket-protocol"
+
+class ConnectionError(Exception):
+    pass
 
 async def _checkTicket(headers: Headers) -> Ticket:
     global TICKET_HEADER_NAME
@@ -94,12 +100,10 @@ async def connect(websocket: ServerConnection):
     LOGGER.info("Connecting...")
     close_code = 1000
     close_reason = ""
+    connection_added = False
     try:
         ticket = await _checkTicket(websocket.request.headers)
-        CONNECTIONS[ticket.band] = CONNECTIONS.get(ticket.band, set()) | {websocket}
-
-        logging_conf.BAND.set(ticket.band)
-        logging_conf.USER_NAME.set(ticket.user_name)
+        connection_added = connectionAdd(ticket, websocket)
         LOGGER.info("Connected!")
         await listen(websocket, ticket.band)
     except ConnectionClosedOK as ex:
@@ -112,11 +116,28 @@ async def connect(websocket: ServerConnection):
         LOGGER.exception(ex)
         close_code = CloseCode.INVALID_DATA
         close_reason = "Invalid ticket!"
+    except ConnectionError as ex:
+        LOGGER.exception(ex)
+        close_code = CloseCode.POLICY_VIOLATION
+        close_reason = str(ex)
     finally:
         await websocket.close(close_code, close_reason)
-        if ticket.band in CONNECTIONS:
-            CONNECTIONS[ticket.band].remove(websocket)
-        LOGGER.debug("Connection closed!")
+        if connection_added:
+           connectionRemove(ticket, websocket)
+        LOGGER.info("Connection closed!")
+
+def connectionAdd(ticket: Ticket, websocket: ServerConnection) -> bool:
+    logging_conf.BAND.set(ticket.band)
+    logging_conf.USER_NAME.set(ticket.user_name)
+    if ticket.user_name in USERS:
+        raise ConnectionError(f"User '{ticket.user_name}' already connected!")
+    CONNECTIONS[ticket.band] = CONNECTIONS.get(ticket.band, set()) | {websocket}
+    USERS.add(ticket.user_name)
+    return True
+
+def connectionRemove(ticket: Ticket, websocket: ServerConnection):
+    CONNECTIONS.get(ticket.band, set()).discard(websocket)
+    USERS.discard(ticket.user_name)
 
 async def startServer(host: str, port: int, redis_host: str, redis_port: int):
     """
