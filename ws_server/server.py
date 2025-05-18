@@ -94,10 +94,8 @@ async def connect(websocket: ServerConnection):
     LOGGER.info("Connecting...")
     close_code = 1000
     close_reason = ""
-    band = None
     try:
         ticket = await _checkTicket(websocket.request.headers)
-        band = ticket.band
         CONNECTIONS[ticket.band] = CONNECTIONS.get(ticket.band, set()) | {websocket}
 
         logging_conf.BAND.set(ticket.band)
@@ -116,7 +114,7 @@ async def connect(websocket: ServerConnection):
         close_reason = "Invalid ticket!"
     finally:
         await websocket.close(close_code, close_reason)
-        if band:
+        if ticket.band in CONNECTIONS:
             CONNECTIONS[ticket.band].remove(websocket)
         LOGGER.debug("Connection closed!")
 
