@@ -16,10 +16,10 @@ from websockets.asyncio.server import Server, serve, ServerConnection
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK, ConnectionClosedError
 
 LOGGER = logging.getLogger("ws_server")
-CONNECTIONS = {
+CONNECTIONS: dict[str, set] = {
     # "<band_name>": set(websocket)
 }
-USERS = set(
+USERS: set[str] = set(
     # <user_name>
 )
 TICKET_HEADER_NAME = "sec-websocket-protocol"
