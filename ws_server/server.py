@@ -33,7 +33,7 @@ async def _checkTicket(headers: Headers) -> Ticket:
         LOGGER.error(f"{TICKET_HEADER_NAME}: '{ticket_enc}'")
         raise TicketError(ex) from ex
 
-    ticket = checkTicket(ticket_enc)
+    ticket = await checkTicket(ticket_enc)
     LOGGER.debug(f"Ticket validated in {time.perf_counter() - time_start_check_ticket:.6f}s!")
     return ticket
 
@@ -98,10 +98,10 @@ async def connect(websocket: ServerConnection):
     try:
         ticket = await _checkTicket(websocket.request.headers)
         band = ticket.band
+        CONNECTIONS[ticket.band] = CONNECTIONS.get(ticket.band, set()) | {websocket}
 
         logging_conf.BAND.set(ticket.band)
-        logging_conf.USER_ID.set(ticket.user_id)
-        CONNECTIONS[ticket.band] = CONNECTIONS.get(ticket.band, set()) | {websocket}
+        logging_conf.USER_NAME.set(ticket.user_name)
         LOGGER.info("Connected!")
         await listen(websocket, ticket.band)
     except ConnectionClosedOK as ex:
@@ -137,7 +137,7 @@ async def startServer(host: str, port: int, redis_host: str, redis_port: int):
     """
     server = None
     try:
-        tickets.init(redis_host, redis_port)
+        await tickets.init(redis_host, redis_port)
         server = await serve(connect, host, port)
         # Run forever
         await asyncio.Future()
