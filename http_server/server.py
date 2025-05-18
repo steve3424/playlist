@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from .middlewares import exception
 from .routers import band
-from .services import redis_service
+from common import tickets
 
 LOGGER = logging.getLogger("playlist")
 
@@ -28,11 +28,12 @@ async def appLife(app: fastapi.FastAPI, *args, **kwargs):
     env_loaded = load_dotenv(dotenv_path=env_file_path)
     if not env_loaded:
         LOGGER.warning("Failed to load environment file!")
+    tickets.init(kwargs["redis_host"], kwargs["redis_port"])
 
-    redis_service.init(kwargs["redis_host"], kwargs["redis_port"])
     yield
+
     LOGGER.info("Shutting down server...")
-    await redis_service.shutdown()
+    await tickets.shutdown()
 
 def health() -> dict:
     return {"detail": "healthy"}

@@ -6,52 +6,36 @@ import logging.config
 from . import logging_conf
 from .logging_conf import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
-import base64
 import argparse
 import asyncio
 import time
-import redis.asyncio as redis
-from common.encryption import CIPHER
-from common.tickets import Ticket
+from common import tickets
+from common.tickets import Ticket, TicketError, checkTicket
 from websockets import Headers, CloseCode
 from websockets.asyncio.server import Server, serve, ServerConnection
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK, ConnectionClosedError
 
 LOGGER = logging.getLogger("ws_server")
-REDIS_CLIENT: redis.Redis = None
 CONNECTIONS = {
     # "<band_name>": <set(websockets)>
 }
 TICKET_HEADER_NAME = "sec-websocket-protocol"
 
-class TicketError(BaseException):
-    pass
-
-async def checkTicket(headers: Headers) -> Ticket:
-    global REDIS_CLIENT
+async def _checkTicket(headers: Headers) -> Ticket:
     global TICKET_HEADER_NAME
     try:
         time_start_check_ticket = time.perf_counter()
         ticket_enc = headers.get(TICKET_HEADER_NAME, "")
-        ticket = ticket_enc.split(",")[0]
-        if not ticket:
-            raise ValueError("Ticket not found!")
-        ticket = Ticket.model_validate_json(
-            CIPHER.decrypt(
-                base64.b16decode(ticket)
-            ).decode(encoding="utf-8")
-        )
-        cached_ticket = await REDIS_CLIENT.get(str(ticket))
-        if not cached_ticket:
-            raise Exception("Ticket not found!")
-        elif ticket_enc != cached_ticket:
-            raise Exception(f"Ticket does not match '{cached_ticket}'!")
-
-        LOGGER.debug(f"Ticket validated in {time.perf_counter() - time_start_check_ticket:.6f}s!")
-        return ticket
+        ticket_enc = ticket_enc.split(",")[0]
+        if not ticket_enc:
+            raise ValueError("Ticket not found in headers!")
     except Exception as ex:
         LOGGER.error(f"{TICKET_HEADER_NAME}: '{ticket_enc}'")
         raise TicketError(ex) from ex
+
+    ticket = checkTicket(ticket_enc)
+    LOGGER.debug(f"Ticket validated in {time.perf_counter() - time_start_check_ticket:.6f}s!")
+    return ticket
 
 async def listen(websocket: ServerConnection, band: str):
     """
@@ -112,7 +96,7 @@ async def connect(websocket: ServerConnection):
     close_reason = ""
     band = None
     try:
-        ticket = await checkTicket(websocket.request.headers)
+        ticket = await _checkTicket(websocket.request.headers)
         band = ticket.band
 
         logging_conf.BAND.set(ticket.band)
@@ -153,7 +137,7 @@ async def startServer(host: str, port: int, redis_host: str, redis_port: int):
     """
     server = None
     try:
-        redisInit(redis_host, redis_port)
+        tickets.init(redis_host, redis_port)
         server = await serve(connect, host, port)
         # Run forever
         await asyncio.Future()
@@ -161,7 +145,7 @@ async def startServer(host: str, port: int, redis_host: str, redis_port: int):
         LOGGER.exception(f"Startup error: {ex}")
     finally:
         await shutdown(server)
-        await redisShutdown()
+        await tickets.shutdown()
 
 async def shutdown(server: Server | None):
     """
@@ -182,23 +166,6 @@ async def shutdown(server: Server | None):
         LOGGER.info("Shutdown complete!")
     else:
         LOGGER.error("Error on server startup!")
-
-def redisInit(host: str, port: int):
-    global REDIS_CLIENT
-    if not REDIS_CLIENT:
-        LOGGER.info(f"Starting redis client on '{host}:{port}'...")
-        REDIS_CLIENT = redis.Redis(
-            host=host,
-            port=port,
-            decode_responses=True,
-        )
-
-async def redisShutdown():
-    global REDIS_CLIENT
-    LOGGER.info("Killing redis client...")
-    if REDIS_CLIENT:
-        await REDIS_CLIENT.aclose()
-        REDIS_CLIENT = None
 
 def main(host: str, port: int, redis_host: str, redis_port: int):
     try:
