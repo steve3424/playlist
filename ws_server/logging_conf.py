@@ -41,7 +41,7 @@ LOGGING_CONFIG = {
         },
     },
     'loggers': { 
-        'ws_server': {
+        'playlist': {
             'handlers': [
                 'stderr'
             ],

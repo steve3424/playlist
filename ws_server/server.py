@@ -15,7 +15,7 @@ from websockets import Headers, CloseCode
 from websockets.asyncio.server import Server, serve, ServerConnection
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK, ConnectionClosedError
 
-LOGGER = logging.getLogger("ws_server")
+LOGGER = logging.getLogger("playlist")
 CONNECTIONS: dict[str, set] = {
     # "<band_name>": set(websocket)
 }
@@ -115,7 +115,7 @@ async def connect(websocket: ServerConnection):
     except TicketError as ex:
         LOGGER.exception(ex)
         close_code = CloseCode.INVALID_DATA
-        close_reason = "Invalid ticket!"
+        close_reason = "Ticket error!"
     except ConnectionError as ex:
         LOGGER.exception(ex)
         close_code = CloseCode.POLICY_VIOLATION
@@ -176,7 +176,7 @@ async def serverStart(host: str, port: int, redis_host: str, redis_port: int):
         # Run forever
         await asyncio.Future()
     except Exception as ex:
-        LOGGER.exception(f"Startup error: {ex}")
+        LOGGER.exception(f"Server startup error: {ex}")
     finally:
         await serverShutdown(server)
         await tickets.shutdown()
@@ -198,8 +198,6 @@ async def serverShutdown(server: Server | None):
         server.close(close_connections=True)
         await server.wait_closed()
         LOGGER.info("Shutdown complete!")
-    else:
-        LOGGER.error("Error on server startup!")
 
 def main(host: str, port: int, redis_host: str, redis_port: int):
     try:

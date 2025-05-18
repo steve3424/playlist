@@ -19,17 +19,27 @@ class Ticket(BaseModel):
     def __str__(self):
         return f"{self.user_name}:{self.band}"
 
-async def init(host: str, port: int) -> None:
+async def init(host: str, port: int) -> bool:
+    """
+    Initializes cache client and pings to check if it
+    can connect. We suppress all exceptions and return
+    bool indicating successful connection.
+    """
     # TODO: should use TLS if going over network.
     global CLIENT
-    if not CLIENT:
-        LOGGER.info(f"Starting ticket client on '{host}:{port}'...")
-        CLIENT = redis.Redis(
-            host=host,
-            port=port,
-            decode_responses=True,
-        )
+    try:
+        if not CLIENT:
+            LOGGER.info(f"Starting ticket client on '{host}:{port}'...")
+            CLIENT = redis.Redis(
+                host=host,
+                port=port,
+                decode_responses=True,
+            )
         await CLIENT.ping()
+        return True
+    except Exception as ex:
+        LOGGER.error(f"Ticket client startup failed: {ex}")
+        return False
 
 async def shutdown() -> None:
     global CLIENT

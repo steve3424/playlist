@@ -1,4 +1,3 @@
-- handle redis/db startup ping failure
 - move db execute to common function
 - implement signup/login/auth in http_server
 - add timings everywhere
