@@ -139,7 +139,7 @@ def connectionRemove(ticket: Ticket, websocket: ServerConnection):
     CONNECTIONS.get(ticket.band, set()).discard(websocket)
     USERS.discard(ticket.user_name)
 
-async def startServer(host: str, port: int, redis_host: str, redis_port: int):
+async def serverStart(host: str, port: int, redis_host: str, redis_port: int):
     """
     Starts the websocket server and redis client.
 
@@ -163,10 +163,10 @@ async def startServer(host: str, port: int, redis_host: str, redis_port: int):
     except Exception as ex:
         LOGGER.exception(f"Startup error: {ex}")
     finally:
-        await shutdown(server)
+        await serverShutdown(server)
         await tickets.shutdown()
 
-async def shutdown(server: Server | None):
+async def serverShutdown(server: Server | None):
     """
     Shut down server. Server may be none if exception
     is thrown on startup.
@@ -188,7 +188,7 @@ async def shutdown(server: Server | None):
 
 def main(host: str, port: int, redis_host: str, redis_port: int):
     try:
-        asyncio.run(startServer(host, port, redis_host, redis_port))
+        asyncio.run(serverStart(host, port, redis_host, redis_port))
     except KeyboardInterrupt:
         LOGGER.debug("ctrl+c stopped server!")
 
