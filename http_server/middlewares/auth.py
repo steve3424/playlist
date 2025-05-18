@@ -27,4 +27,4 @@ class Authenticate:
             # raise HTTPException(status_code=401, detail="Unauthorized")
         # return user_info
         LOGGER.info(f"Auth took {time.perf_counter() - time_auth_start}s!")
-        return {"id": "abcde"}
+        return {"id": 123, "name": "abcde"}
