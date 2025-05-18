@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
+from .middlewares import exception
 from .routers import band
 from .services import redis_service
 
@@ -53,7 +54,8 @@ if __name__ == "__main__":
             environment=args.environment
         )
     )
-    app.include_router(band.router)
+    app.add_exception_handler(exception.ExceptionHandlerGeneral)
     app.add_api_route("/health", health)
+    app.include_router(band.router)
 
     uvicorn.run(app, host=args.host, port=args.port)
