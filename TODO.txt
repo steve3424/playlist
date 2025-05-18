@@ -1,6 +1,6 @@
 - handle redis/db startup ping failure
-- implement signup/login/auth in http_server
 - move db execute to common function
+- implement signup/login/auth in http_server
 - add timings everywhere
 - make client sample actually have playlist
 - handle different message types in ws server
