@@ -127,17 +127,32 @@ async def connect(websocket: ServerConnection):
         LOGGER.info("Connection closed!")
 
 def connectionAdd(ticket: Ticket, websocket: ServerConnection) -> bool:
+    global CONNECTIONS
+    global USERS
     logging_conf.BAND.set(ticket.band)
     logging_conf.USER_NAME.set(ticket.user_name)
     if ticket.user_name in USERS:
         raise ConnectionError(f"User '{ticket.user_name}' already connected!")
-    CONNECTIONS[ticket.band] = CONNECTIONS.get(ticket.band, set()) | {websocket}
     USERS.add(ticket.user_name)
+    if ticket.band in CONNECTIONS:
+        CONNECTIONS[ticket.band].add(websocket)
+    else:
+        CONNECTIONS[ticket.band] = {websocket}
     return True
 
 def connectionRemove(ticket: Ticket, websocket: ServerConnection):
-    CONNECTIONS.get(ticket.band, set()).discard(websocket)
-    USERS.discard(ticket.user_name)
+    """
+    Removes connection/user from our in-memory connection tracking.
+    This should only be called if connection was added in both places.
+    Otherwise this will throw an exception. This is what we want so we
+    can see if this is ever called incorrectly.
+    """
+    global CONNECTIONS
+    global USERS
+    CONNECTIONS[ticket.band].remove(websocket)
+    USERS.remove(ticket.user_name)
+    if len(CONNECTIONS[ticket.band]) == 0:
+        del CONNECTIONS[ticket.band]
 
 async def serverStart(host: str, port: int, redis_host: str, redis_port: int):
     """
