@@ -27,7 +27,7 @@ async def appLife(app: fastapi.FastAPI, *args, **kwargs):
     LOGGER.info(f"Loading configs from '{env_file_name}'...")
     env_loaded = load_dotenv(dotenv_path=env_file_path)
     if not env_loaded:
-        LOGGER.warning(f"Failed to load environment file!")
+        LOGGER.warning("Failed to load environment file!")
 
     redis_service.init(kwargs["redis_host"], kwargs["redis_port"])
     yield
