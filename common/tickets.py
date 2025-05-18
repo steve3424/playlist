@@ -19,7 +19,7 @@ class Ticket(BaseModel):
     def __str__(self):
         return f"{self.user_name}:{self.band}"
 
-def init(host: str, port: int) -> None:
+async def init(host: str, port: int) -> None:
     # TODO: should use TLS if going over network.
     global CLIENT
     if not CLIENT:
@@ -29,6 +29,7 @@ def init(host: str, port: int) -> None:
             port=port,
             decode_responses=True,
         )
+        await CLIENT.ping()
 
 async def shutdown() -> None:
     global CLIENT
@@ -44,7 +45,7 @@ async def checkTicket(ticket_enc: str) -> Ticket:
     try:
         ticket = Ticket.model_validate_json(
             CIPHER.decrypt(
-                base64.b16decode(ticket)
+                base64.b16decode(ticket_enc)
             ).decode(encoding="utf-8")
         )
         cached_ticket = await CLIENT.get(str(ticket))
