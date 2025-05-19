@@ -13,7 +13,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from .middlewares import exception
-from .routers import band
+from .routers import band, user
+from .services import db
 from common import tickets
 
 LOGGER = logging.getLogger("playlist")
@@ -29,6 +30,7 @@ async def appLife(app: fastapi.FastAPI, *args, **kwargs):
     if not env_loaded:
         LOGGER.warning("Failed to load environment file!")
     await tickets.init(kwargs["redis_host"], kwargs["redis_port"])
+    db.init()
 
     yield
 
@@ -58,5 +60,6 @@ if __name__ == "__main__":
     app.add_middleware(exception.ExceptionHandlerGeneral)
     app.add_api_route("/health", health)
     app.include_router(band.router)
+    app.include_router(user.router)
 
     uvicorn.run(app, host=args.host, port=args.port)
