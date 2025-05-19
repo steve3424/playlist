@@ -15,8 +15,8 @@ USERNAME_MAX_LEN = 32
 
 router = APIRouter(prefix="/user")
 
-@router.post("/")
-async def signup(
+@router.post("")
+async def register(
     user_name: Annotated[str, Form()],
     password: Annotated[str, Form()]
 ):
