@@ -9,6 +9,13 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 
+OPEN_ENVS = {
+    "dev"
+}
+OPEN_ENDPOINTS = {
+    "/health"
+}
+
 class AuthenticationError(Exception):
     pass
 
@@ -19,14 +26,10 @@ class Authenticate(BaseHTTPMiddleware):
         call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         try:
-            open_envs = {
-                "dev"
-            }
-            open_endpoints = {
-                "/health"
-            }
+            global OPEN_ENVS
+            global OPEN_ENDPOINTS
             current_env = os.environ["ENV"]
-            if current_env in open_envs or request.url.path in open_endpoints:
+            if current_env in OPEN_ENVS or request.url.path in OPEN_ENDPOINTS:
                 user_info = {}
                 LOGGER.debug(f"Auth skipped for endpoint '{request.url.path}' in env '{current_env}'!")
             else:
