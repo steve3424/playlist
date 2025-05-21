@@ -13,7 +13,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from .middlewares import exception, authentication
-from .routers import band, user
+from .routers import bands, users
 from .services import db
 from common import tickets
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     app.add_middleware(exception.ExceptionHandlerGeneral)
     app.add_middleware(authentication.Authenticate)
     app.add_api_route("/health", health)
-    app.include_router(band.router)
-    app.include_router(user.router)
+    app.include_router(bands.router)
+    app.include_router(users.router)
 
     uvicorn.run(app, host=args.host, port=args.port)

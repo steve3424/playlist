@@ -3,9 +3,10 @@ import logging
 import bcrypt
 import base64
 from typing import Annotated
-from fastapi import APIRouter, Form
+from fastapi import APIRouter, Form, Request, Depends
 from fastapi.responses import JSONResponse
 from ..services import db
+from ..middlewares.authentication import Authenticate
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 PASSWORD_MIN_LEN = 8
@@ -13,12 +14,12 @@ PASSWORD_MAX_LEN = 32
 USERNAME_MIN_LEN = 1
 USERNAME_MAX_LEN = 32
 
-router = APIRouter(prefix="/user")
+router = APIRouter(prefix="/users")
 
 @router.post("")
 async def register(
     user_name: Annotated[str, Form()],
-    password: Annotated[str, Form()]
+    password: Annotated[str, Form()],
 ):
     if not user_name:
         return JSONResponse({"message": "Password can't be empty!"}, status_code=422)
@@ -37,3 +38,17 @@ async def register(
 
     await db.userAdd(user_name, password_enc)
     return JSONResponse({"message": f"Welcome {user_name}!"})
+
+@router.get("")
+async def usersAll(
+    request: Request,
+):
+    LOGGER.info(request.state.user_info)
+    return await db.usersAll()
+
+@router.get("/{id}")
+async def userById(
+    request: Request,
+    id: int
+):
+    return id
