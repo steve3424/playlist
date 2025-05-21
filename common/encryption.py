@@ -53,16 +53,11 @@ class AESCipher:
         except Exception as ex:
             raise EncryptionError(ex) from ex
 
-CIPHER = AESCipher(
-    "password".encode(encoding="utf8"),
-    "salt".encode(encoding="utf8"),
-)
-
-def _encrypt(cipher: AESCipher, args: argparse.Namespace):
+def cliEncrypt(cipher: AESCipher, args: argparse.Namespace):
     cipher_text = cipher.encrypt(args.message.encode(encoding="utf8"))
     print(f"cipher_text (base16 encoded): '{base64.b16encode(cipher_text).decode(encoding="utf8")}'")
 
-def _decrypt(cipher: AESCipher, args: argparse.Namespace):
+def cliDecrypt(cipher: AESCipher, args: argparse.Namespace):
     message = cipher.decrypt(base64.b16decode(args.message)).decode(encoding="utf8")
     print(f"message: '{message}'")
 
@@ -74,13 +69,13 @@ if __name__ == "__main__":
     encrypt_parser.add_argument("-p", "--password", required=True)
     encrypt_parser.add_argument("-s", "--salt",     required=True)
     encrypt_parser.add_argument("-m", "--message",  required=True)
-    encrypt_parser.set_defaults(func=_encrypt)
+    encrypt_parser.set_defaults(func=cliEncrypt)
 
     decrypt_parser = sub_parsers.add_parser("decrypt")
     decrypt_parser.add_argument("-p", "--password", required=True)
     decrypt_parser.add_argument("-s", "--salt",     required=True)
     decrypt_parser.add_argument("-m", "--message",  required=True)
-    decrypt_parser.set_defaults(func=_decrypt)
+    decrypt_parser.set_defaults(func=cliDecrypt)
 
     args = arg_parser.parse_args()
     cipher = AESCipher(args.password.encode("utf8"), args.salt.encode("utf8"))

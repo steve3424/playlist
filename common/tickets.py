@@ -1,13 +1,15 @@
 import logging
 import base64
+import os
 import redis.asyncio as redis
 from typing import Annotated
 from pydantic import BaseModel, StringConstraints
-from .encryption import CIPHER
+from .encryption import AESCipher
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 CLIENT: redis.Redis = None
 TICKET_TTL = 10 # seconds
+CIPHER = None
 
 class TicketError(Exception):
     pass
@@ -27,7 +29,17 @@ async def init(host: str, port: int) -> bool:
     """
     # TODO: should use TLS if going over network.
     global CLIENT
+    global CIPHER
     try:
+        if not CIPHER:
+            secret = os.environ.get("TICKET_SECRET", None)
+            salt = os.environ.get("TICKET_SECRET_SALT", None)
+            if not secret:
+                raise ValueError("TICKET_SECRET not found in env!")
+            elif not salt:
+                raise ValueError("TICKET_SECRET_SALT not found in env!")
+            CIPHER = AESCipher(secret.encode(encoding="utf-8"), salt.encode(encoding="utf-8"))
+
         if not CLIENT:
             LOGGER.info(f"Starting ticket client on '{host}:{port}'...")
             CLIENT = redis.Redis(
@@ -52,6 +64,7 @@ async def redeem(ticket_enc: str) -> Ticket:
     """
     Decrypts ticket, checks against cache, and returns ticket object.
     """
+    global CIPHER
     try:
         ticket = Ticket.model_validate_json(
             CIPHER.decrypt(
@@ -71,8 +84,9 @@ async def create(user_name: str, band: str) -> str:
     """
     Creates ticket, adds to cache, and returns encrypted base16 ticket.
     """
+    global TICKET_TTL
+    global CIPHER
     try:
-        global TICKET_TTL
         ticket = Ticket(
             user_name=user_name,
             band=band
