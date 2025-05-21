@@ -27,7 +27,7 @@ TICKET_HEADER_NAME = "sec-websocket-protocol"
 class ConnectionError(Exception):
     pass
 
-async def _checkTicket(headers: Headers) -> tickets.Ticket:
+async def checkTicket(headers: Headers) -> tickets.Ticket:
     global TICKET_HEADER_NAME
     try:
         time_start_check_ticket = time.perf_counter()
@@ -102,7 +102,7 @@ async def connect(websocket: ServerConnection):
     close_reason = ""
     connection_added = False
     try:
-        ticket = await _checkTicket(websocket.request.headers)
+        ticket = await checkTicket(websocket.request.headers)
         connection_added = connectionAdd(ticket, websocket)
         LOGGER.info("Connected!")
         await listen(websocket, ticket.band)
