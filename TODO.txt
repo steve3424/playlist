@@ -1,3 +1,5 @@
+- http_server logging
+- only log timings and errors
 - jwt based authentication
 - role based auth
 - logout (remove auth cookie?)
