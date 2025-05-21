@@ -2,8 +2,8 @@ import logging
 import time
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
-from common.tickets import TicketError, getTicket
-from ..middlewares.authentication import Authenticate
+from common import tickets
+from common.tickets import TicketError
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 
@@ -18,7 +18,7 @@ async def ticket(
     try:
         time_ticket_start = time.perf_counter()
         # TODO: determine if user is allowed to have ticket for requested band.
-        ticket = await getTicket(user_info["name"], band)
+        ticket = await tickets.create(user_info["name"], band)
         LOGGER.info(f"{request.url.path} took {time.perf_counter() - time_ticket_start}s!")
         return ticket
     except TicketError as ex:

@@ -10,7 +10,7 @@ import argparse
 import asyncio
 import time
 from common import tickets
-from common.tickets import Ticket, TicketError, checkTicket
+from common.tickets import Ticket, TicketError
 from websockets import Headers, CloseCode
 from websockets.asyncio.server import Server, serve, ServerConnection
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK, ConnectionClosedError
@@ -27,7 +27,7 @@ TICKET_HEADER_NAME = "sec-websocket-protocol"
 class ConnectionError(Exception):
     pass
 
-async def _checkTicket(headers: Headers) -> Ticket:
+async def _checkTicket(headers: Headers) -> tickets.Ticket:
     global TICKET_HEADER_NAME
     try:
         time_start_check_ticket = time.perf_counter()
@@ -39,7 +39,7 @@ async def _checkTicket(headers: Headers) -> Ticket:
         LOGGER.error(f"{TICKET_HEADER_NAME}: '{ticket_enc}'")
         raise TicketError(ex) from ex
 
-    ticket = await checkTicket(ticket_enc)
+    ticket = await tickets.redeem(ticket_enc)
     LOGGER.debug(f"Ticket validated in {time.perf_counter() - time_start_check_ticket:.6f}s!")
     return ticket
 

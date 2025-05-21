@@ -48,7 +48,7 @@ async def shutdown() -> None:
         await CLIENT.aclose()
         CLIENT = None
 
-async def checkTicket(ticket_enc: str) -> Ticket:
+async def redeem(ticket_enc: str) -> Ticket:
     """
     Decrypts ticket, checks against cache, and returns ticket object.
     """
@@ -67,7 +67,7 @@ async def checkTicket(ticket_enc: str) -> Ticket:
     except Exception as ex:
         raise TicketError(ex) from ex
 
-async def getTicket(user_name: str, band: str) -> str:
+async def create(user_name: str, band: str) -> str:
     """
     Creates ticket, adds to cache, and returns encrypted base16 ticket.
     """
