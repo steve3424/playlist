@@ -9,6 +9,9 @@ logging.config.dictConfig(LOGGING_CONFIG)
 import argparse
 import asyncio
 import time
+import os
+from pathlib import Path
+from dotenv import load_dotenv
 from common import tickets
 from common.tickets import Ticket, TicketError
 from websockets import Headers, CloseCode
@@ -154,7 +157,7 @@ def connectionRemove(ticket: Ticket, websocket: ServerConnection):
     if len(CONNECTIONS[ticket.band]) == 0:
         del CONNECTIONS[ticket.band]
 
-async def serverStart(host: str, port: int, redis_host: str, redis_port: int):
+async def serverStart(host: str, port: int, redis_host: str, redis_port: int, environment: str):
     """
     Starts the websocket server and redis client.
 
@@ -171,7 +174,14 @@ async def serverStart(host: str, port: int, redis_host: str, redis_port: int):
     """
     server = None
     try:
-        await tickets.init(redis_host, redis_port)
+        env_file_name = f"{environment}.env"
+        env_file_path = Path(os.path.dirname(__file__), "configs", env_file_name)
+        LOGGER.info(f"Loading configs from '{env_file_name}'...")
+        env_loaded = load_dotenv(dotenv_path=env_file_path)
+        if not env_loaded:
+            LOGGER.warning("Failed to load environment file!")
+        if not await tickets.init(redis_host, redis_port):
+            raise Exception("Ticket startup failed!")
         server = await serve(connect, host, port)
         # Run forever
         await asyncio.Future()
@@ -199,9 +209,9 @@ async def serverShutdown(server: Server | None):
         await server.wait_closed()
         LOGGER.info("Shutdown complete!")
 
-def main(host: str, port: int, redis_host: str, redis_port: int):
+def main(host: str, port: int, redis_host: str, redis_port: int, environment: str):
     try:
-        asyncio.run(serverStart(host, port, redis_host, redis_port))
+        asyncio.run(serverStart(host, port, redis_host, redis_port, environment))
     except KeyboardInterrupt:
         LOGGER.debug("ctrl+c stopped server!")
 
@@ -211,6 +221,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--port", type=int, default=8080)
     arg_parser.add_argument("--redis-host", type=str, default="localhost")
     arg_parser.add_argument("--redis-port", type=int, default=6379)
+    arg_parser.add_argument("--environment", type=str, default="dev", choices=["dev", "prod"])
     args = arg_parser.parse_args()
 
-    main(args.host, args.port, args.redis_host, args.redis_port)
+    main(args.host, args.port, args.redis_host, args.redis_port, args.environment)
