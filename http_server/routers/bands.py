@@ -16,5 +16,4 @@ async def ticket(
 ) -> PlainTextResponse:
     # TODO: determine if user is allowed to have ticket for requested band.
     ticket = await tickets.create(user_info.name, band)
-    LOGGER.debug(ticket)
     return PlainTextResponse(ticket)
