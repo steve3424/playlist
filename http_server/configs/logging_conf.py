@@ -4,6 +4,7 @@ from contextvars import ContextVar
 IP_ADDRESS: ContextVar[str] = ContextVar("ip_address", default="-")
 ENDPOINT: ContextVar[str] = ContextVar("endpoint", default="-")
 USER_NAME: ContextVar[str] = ContextVar("user_name", default="-")
+REQUEST_ID: ContextVar[str] = ContextVar("request_id", default="-")
 
 class TraceFilter(Filter):
     def __init__(self):
@@ -16,6 +17,7 @@ class TraceFilter(Filter):
         log_record.ip_address = IP_ADDRESS.get()
         log_record.endpoint = ENDPOINT.get()
         log_record.user_name = USER_NAME.get()
+        log_record.request_id = REQUEST_ID.get()
         return True
 
 LOGGING_CONFIG = { 
@@ -23,7 +25,7 @@ LOGGING_CONFIG = {
     "disable_existing_loggers": True,
     "formatters": { 
         "standard": { 
-            "format": "[%(levelname)s] [%(ip_address)s][%(endpoint)s][%(user_name)s] %(asctime)s %(name)s: %(message)s"
+            "format": "[%(levelname)s] [%(ip_address)s][%(endpoint)s][%(user_name)s][%(request_id)s] %(asctime)s %(name)s: %(message)s"
         },
     },
     "filters": {

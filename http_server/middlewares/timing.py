@@ -3,6 +3,7 @@ Entry point for every request. Handles general exceptions and logs api timings.
 """
 import logging
 import time
+from uuid import uuid4
 from typing import Callable, Awaitable
 from fastapi import Request, HTTPException
 from fastapi.responses import Response, JSONResponse
@@ -21,6 +22,8 @@ class TimingMiddleware(BaseHTTPMiddleware):
             time_start_request = time.perf_counter()
             logging_conf.IP_ADDRESS.set(request.client.host)
             logging_conf.ENDPOINT.set(request.url.path)
+            logging_conf.REQUEST_ID.set(uuid4().hex)
+            LOGGER.info("Requesting...")
             result = await call_next(request)
             LOGGER.info(f"{(time.perf_counter() - time_start_request):.6f}s")
             return result
