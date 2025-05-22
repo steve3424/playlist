@@ -5,6 +5,7 @@ from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from ..services.authorization import User, AppRoles
+from ..configs import logging_conf
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 
@@ -19,7 +20,7 @@ class Authenticate(BaseHTTPMiddleware):
     ) -> Response:
         try:
             if request.headers.get("Authorization", None):
-                user_info = self.validateToken(request.headers["Authorization"])
+                user_info: User = self.validateToken(request.headers["Authorization"])
             elif request.cookies.get("Authorization", None):
                 user_info = self.validateToken(request.cookies["Authorization"])
             else:
