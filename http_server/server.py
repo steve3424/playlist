@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
-from .middlewares import exception, authentication
+from .middlewares import authentication, timing
 from .routers import bands, users
 from .services import db
 from common import tickets
@@ -62,7 +62,7 @@ if __name__ == "__main__":
             environment=args.environment
         )
     )
-    app.add_middleware(exception.ExceptionHandlerGeneral)
+    app.add_middleware(timing.TimingMiddleware)
     app.add_middleware(authentication.Authenticate)
     app.add_api_route("/health", health)
     app.include_router(bands.router)

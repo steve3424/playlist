@@ -1,3 +1,6 @@
+"""
+Entry point for every request. Handles general exceptions and logs api timings.
+"""
 import logging
 import time
 from typing import Callable, Awaitable
@@ -8,7 +11,7 @@ from ..configs import logging_conf
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 
-class ExceptionHandlerGeneral(BaseHTTPMiddleware):
+class TimingMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self,
         request: Request,
