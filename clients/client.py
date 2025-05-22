@@ -65,7 +65,7 @@ def getTicket(host: str, port: int, band: str) -> str:
     if response.status_code != 200:
         raise Exception(response.json())
     LOGGER.info(f"Got ticket in {time.perf_counter() - time_start_get_ticket:.3f}s!")
-    return response.json()
+    return response.text
 
 def main(ws_host: str, ws_port: int, ticket_host: str, ticket_port: int, band: str):
     try:
