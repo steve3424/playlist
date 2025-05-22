@@ -20,8 +20,24 @@ USER_ADD = """
 """
 
 USERS_ALL = """
-    SELECT name
-    FROM users;
+    SELECT users.name AS name,
+           roles.name AS role,
+           datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
+           datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
+    FROM users
+    JOIN roles
+      ON users.role_id = roles.id;
+"""
+
+USER_BY_ID = """
+    SELECT users.name AS name,
+           roles.name AS role,
+           datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
+           datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
+    FROM users
+    JOIN roles
+      ON users.role_id = roles.id
+    WHERE users.id = ?;
 """
 
 def init():
@@ -53,3 +69,7 @@ async def userAdd(user_name: str, password: str) -> int:
 async def usersAll() -> list:
     global USERS_ALL
     return await execute(USERS_ALL)
+
+async def userById(id: int) -> list:
+    global USER_BY_ID
+    return await execute(USER_BY_ID, (id,))

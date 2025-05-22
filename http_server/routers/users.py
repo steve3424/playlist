@@ -49,6 +49,12 @@ async def usersAll(
 @router.get("/{id}")
 async def userById(
     request: Request,
-    id: int
+    id: int,
+    user_info: User=Depends(AuthorizeAppRole(AppRoles.user))
 ):
-    return id
+    if user_info.id != id:
+        return JSONResponse({"message": "Unauthorized!"}, status_code=403)
+    results = await db.userById(id)
+    if not results:
+        return JSONResponse({"message": "Not Found!"}, status_code=404)
+    return results[0]
