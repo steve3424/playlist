@@ -23,12 +23,12 @@ class Authenticate(BaseHTTPMiddleware):
             elif request.cookies.get("Authorization", None):
                 user_info = self.validateToken(request.cookies["Authorization"])
             else:
-                return JSONResponse({"message": "No auth token found!"}, status_code=401)
+                return JSONResponse({"message": "No authentication token found!"}, status_code=401)
             request.state.user_info = user_info
             return await call_next(request)
         except AuthenticationError as ex:
             LOGGER.exception(ex)
-            return JSONResponse({"message": "Unauthorized"}, status_code=401)
+            return JSONResponse({"message": "Unable to authenticate request!"}, status_code=401)
 
     # TODO: finalize permission model and actually do auth
     def validateToken(self, token: str) -> dict:
