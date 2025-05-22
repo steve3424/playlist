@@ -38,13 +38,12 @@ async def checkTicket(headers: Headers) -> tickets.Ticket:
         ticket_enc = ticket_enc.split(",")[0]
         if not ticket_enc:
             raise ValueError("Ticket not found in headers!")
+        ticket = await tickets.redeem(ticket_enc)
+        LOGGER.debug(f"Ticket validated in {time.perf_counter() - time_start_check_ticket:.6f}s!")
+        return ticket
     except Exception as ex:
         LOGGER.error(f"{TICKET_HEADER_NAME}: '{ticket_enc}'")
         raise TicketError(ex) from ex
-
-    ticket = await tickets.redeem(ticket_enc)
-    LOGGER.debug(f"Ticket validated in {time.perf_counter() - time_start_check_ticket:.6f}s!")
-    return ticket
 
 async def listen(websocket: ServerConnection, band: str):
     """
