@@ -68,4 +68,4 @@ if __name__ == "__main__":
     app.include_router(bands.router)
     app.include_router(users.router)
 
-    uvicorn.run(app, host=args.host, port=args.port)
+    uvicorn.run(app, host=args.host, port=args.port, log_config=LOGGING_CONFIG)
