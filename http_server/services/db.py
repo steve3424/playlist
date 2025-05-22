@@ -19,13 +19,19 @@ USER_ADD = """
         (?, ?);
 """
 
+USERS_ALL = """
+    SELECT name
+    FROM users;
+"""
+
 def init():
     global DB_NAME
     DB_NAME = Path(os.path.dirname(__file__), os.pardir, "data", os.environ.get("DB_NAME"))
 
-async def execute(query: str, data: tuple) -> list | int:
+async def execute(query: str, data: tuple=None) -> list | int:
     global DB_NAME
     async with asql.connect(DB_NAME, autocommit=True) as db:
+        await db.execute("PRAGMA foreign_keys = ON;")
         db.row_factory = asql.Row
         async with db.execute(query, data) as cursor:
             if cursor.rowcount == -1:
@@ -43,3 +49,7 @@ async def userAdd(user_name: str, password: str) -> int:
     result = await execute(USER_ADD, (user_name, password))
     if result != 1:
         raise Exception(f"Error adding user. Rows affected is {result}!")
+
+async def usersAll() -> list:
+    global USERS_ALL
+    return await execute(USERS_ALL)
