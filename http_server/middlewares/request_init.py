@@ -1,5 +1,5 @@
 """
-Entry point for every request. Handles general exceptions and logs api timings.
+Entry point for every request. Handles general exceptions, logs api timings, sets up request logging.
 """
 import logging
 import time
@@ -12,7 +12,7 @@ from ..configs import logging_conf
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 
-class TimingMiddleware(BaseHTTPMiddleware):
+class InitMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self,
         request: Request,
