@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from .middlewares import authentication, request_init
 from .routers import bands, users
-from .services import db
+from .data import db
 from common import tickets
 
 LOGGER = logging.getLogger("playlist")

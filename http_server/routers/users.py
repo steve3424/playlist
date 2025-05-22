@@ -5,7 +5,7 @@ import base64
 from typing import Annotated
 from fastapi import APIRouter, Form, Request, Depends
 from fastapi.responses import JSONResponse
-from ..services import db
+from ..data import db
 from ..services.authorization import User, AppRoles, AuthorizeAppRole
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
