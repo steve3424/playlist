@@ -43,7 +43,6 @@ async def register(
 async def usersAll(
     request: Request,
 ):
-    LOGGER.info(request.state.user_info)
     return await db.usersAll()
 
 @router.get("/{id}")
