@@ -30,11 +30,6 @@ async def appLife(app: fastapi.FastAPI, *args, **kwargs):
     env_loaded = load_dotenv(dotenv_path=env_file_path)
     if not env_loaded:
         LOGGER.warning("Failed to load environment file!")
-    current_env = os.environ.get("ENV", "NONE")
-    if current_env in authentication.OPEN_ENVS:
-        LOGGER.warning("API authentication turned off!")
-    else:
-        LOGGER.info("API authentication turned on!")
     await tickets.init(kwargs["redis_host"], kwargs["redis_port"])
     db.init()
 

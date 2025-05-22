@@ -10,13 +10,6 @@ from ..services.authorization import User, AppRoles
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 
-OPEN_ENVS = {
-    "dev"
-}
-OPEN_ENDPOINTS = {
-    "/health"
-}
-
 class AuthenticationError(Exception):
     pass
 
@@ -27,22 +20,12 @@ class Authenticate(BaseHTTPMiddleware):
         call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         try:
-            global OPEN_ENVS
-            global OPEN_ENDPOINTS
-            current_env = os.environ["ENV"]
-            if current_env in OPEN_ENVS or request.url.path in OPEN_ENDPOINTS:
-                user_info = User(
-                    id=0,
-                    name="unknown",
-                    role=AppRoles.admin
-                )
+            if request.headers.get("Authorization", None):
+                user_info = self.validateToken(request.headers["Authorization"])
+            elif request.cookies.get("Authorization", None):
+                user_info = self.validateToken(request.cookies["Authorization"])
             else:
-                if request.headers.get("Authorization", None):
-                    user_info = self.validateToken(request.headers["Authorization"])
-                elif request.cookies.get("Authorization", None):
-                    user_info = self.validateToken(request.cookies["Authorization"])
-                else:
-                    return JSONResponse({"message": "No auth token found!"}, status_code=401)
+                return JSONResponse({"message": "No auth token found!"}, status_code=401)
             request.state.user_info = user_info
             return await call_next(request)
         except AuthenticationError as ex:
