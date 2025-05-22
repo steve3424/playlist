@@ -3,10 +3,12 @@
 ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
-    name VARCHAR(64) NOT NULL,
+    name VARCHAR(64) UNIQUE NOT NULL,
     password VARCHAR(80) NOT NULL,
+    role_id INTEGER NOT NULL DEFAULT 0,
     created_ts INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-    updated_ts INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+    updated_ts INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
 CREATE TRIGGER IF NOT EXISTS updated_ts_users
