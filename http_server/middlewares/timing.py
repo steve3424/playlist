@@ -25,7 +25,7 @@ class TimingMiddleware(BaseHTTPMiddleware):
             logging_conf.REQUEST_ID.set(uuid4().hex)
             LOGGER.info("Requesting...")
             result = await call_next(request)
-            LOGGER.info(f"{(time.perf_counter() - time_start_request):.6f}s")
+            LOGGER.info(f"[{result.status_code}] {(time.perf_counter() - time_start_request):.6f}s")
             return result
         except HTTPException as ex:
             # NOTE: we may want to raise this from our application code.
