@@ -3,8 +3,8 @@ Websocket server.
 """
 import logging
 import logging.config
-from . import logging_conf
-from .logging_conf import LOGGING_CONFIG
+from .configs import logging_conf
+from .configs.logging_conf import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
 import argparse
 import asyncio

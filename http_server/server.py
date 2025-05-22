@@ -1,9 +1,9 @@
 """
-Websocket server.
+HTTP server.
 """
 import logging
 import logging.config
-from .logging_conf import LOGGING_CONFIG
+from .configs.logging_conf import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
 import argparse
 import fastapi
