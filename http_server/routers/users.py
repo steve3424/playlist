@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Form, Request, Depends
 from fastapi.responses import JSONResponse
 from ..services import db
-from ..middlewares.authentication import Authenticate
+from ..services.authorization import User, AppRoles, AuthorizeAppRole
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 PASSWORD_MIN_LEN = 8
@@ -42,6 +42,7 @@ async def register(
 @router.get("")
 async def usersAll(
     request: Request,
+    user_info: User=Depends(AuthorizeAppRole(AppRoles.admin))
 ):
     return await db.usersAll()
 
