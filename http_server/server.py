@@ -9,6 +9,7 @@ import argparse
 import fastapi
 import uvicorn
 import os
+from fastapi.responses import PlainTextResponse
 from pathlib import Path
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
@@ -42,8 +43,8 @@ async def appLife(app: fastapi.FastAPI, *args, **kwargs):
     LOGGER.info("Shutting down server...")
     await tickets.shutdown()
 
-def health() -> dict:
-    return {"detail": "healthy"}
+def health() -> PlainTextResponse:
+    return PlainTextResponse("healthy")
     
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
