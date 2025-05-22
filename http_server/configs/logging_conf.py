@@ -48,7 +48,7 @@ LOGGING_CONFIG = {
             "level": "DEBUG",
             "propagate": False
         },
-        "uvicorn": {
+        "uvicorn.error": {
             "handlers": [
                 "stderr"
             ],
