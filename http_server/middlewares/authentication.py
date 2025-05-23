@@ -25,7 +25,7 @@ class Authenticate(BaseHTTPMiddleware):
                 user_info: User = self.validateToken(request.cookies["Authorization"])
             else:
                 return JSONResponse({"message": "No authentication token found!"}, status_code=401)
-            logging_conf.USER_NAME.set(user_info.name)
+            logging_conf.USER_NAME.set(f"{user_info.name}:{user_info.id}")
             request.state.user_info = user_info
             return await call_next(request)
         except AuthenticationError as ex:

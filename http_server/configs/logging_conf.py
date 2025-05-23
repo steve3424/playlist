@@ -25,7 +25,7 @@ LOGGING_CONFIG = {
     "disable_existing_loggers": True,
     "formatters": { 
         "standard": { 
-            "format": "[%(levelname)s] [%(ip_address)s][%(endpoint)s][%(user_name)s][%(request_id)s] %(asctime)s %(name)s: %(message)s"
+            "format": "[%(levelname)s] [%(request_id)s][%(ip_address)s][%(endpoint)s][%(user_name)s] %(asctime)s %(name)s: %(message)s"
         },
     },
     "filters": {
