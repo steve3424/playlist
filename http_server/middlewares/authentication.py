@@ -4,7 +4,7 @@ from typing import Callable, Awaitable
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from ..services.authorization import User, AppRoles
+from ..authorization.models import User, AppRoles
 from ..configs import logging_conf
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")

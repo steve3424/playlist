@@ -6,7 +6,9 @@ from typing import Annotated
 from fastapi import APIRouter, Form, Request, Depends
 from fastapi.responses import JSONResponse
 from ..data import db
-from ..services.authorization import User, AppRoles, AuthorizeAppRole
+from ..authorization.user import checkUserId
+from ..authorization.models import User, AppRoles
+from ..authorization.endpoint import AuthorizeEndpoint
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 PASSWORD_MIN_LEN = 8
@@ -42,7 +44,7 @@ async def register(
 @router.get("")
 async def usersAll(
     request: Request,
-    user_info: User=Depends(AuthorizeAppRole(AppRoles.admin))
+    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
 ):
     return await db.usersAll()
 
@@ -50,10 +52,8 @@ async def usersAll(
 async def userById(
     request: Request,
     id: int,
-    user_info: User=Depends(AuthorizeAppRole(AppRoles.user))
+    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, checkUserId))
 ):
-    if user_info.id != id:
-        return JSONResponse({"message": "Unauthorized!"}, status_code=403)
     results = await db.userById(id)
     if not results:
         return JSONResponse({"message": "Not Found!"}, status_code=404)
