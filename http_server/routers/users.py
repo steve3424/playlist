@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Form, Request, Depends
 from fastapi.responses import JSONResponse
 from ..data import db
-from ..authorization import user
+from ..authorization import user as user_auth
 from ..authorization.models import User, AppRoles
 from ..authorization.endpoint import AuthorizeEndpoint
 
@@ -52,7 +52,7 @@ async def usersAll(
 async def userById(
     request: Request,
     id: int,
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user.checkUserId))
+    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserId))
 ):
     results = await db.userById(id)
     if not results:
@@ -63,7 +63,7 @@ async def userById(
 async def userByName(
     request: Request,
     name: str,
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user.checkUserName))
+    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserName))
 ):
     results = await db.userByName(name)
     if not results:
