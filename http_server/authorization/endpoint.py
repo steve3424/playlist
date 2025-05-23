@@ -18,5 +18,7 @@ class AuthorizeEndpoint:
         if user_info.role < self.role:
             raise HTTPException(403, "Unauthorized!")
         elif user_info.role < max(e.value for e in AppRoles) and self.endpoint_authorization:
+            # NOTE: user does not have max permissions AND
+            #       this endpoint requries further authorization
             self.endpoint_authorization(request, user_info)
         return user_info
