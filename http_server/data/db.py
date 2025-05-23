@@ -40,6 +40,17 @@ USER_BY_ID = """
     WHERE users.id = ?;
 """
 
+USER_BY_NAME = """
+    SELECT users.name AS name,
+           roles.name AS role,
+           datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
+           datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
+    FROM users
+    JOIN roles
+      ON users.role_id = roles.id
+    WHERE users.name = ?;
+"""
+
 def init():
     global DB_NAME
     DB_NAME = Path(os.path.dirname(__file__), os.pardir, "data", os.environ.get("DB_NAME"))
@@ -73,3 +84,7 @@ async def usersAll() -> list:
 async def userById(id: int) -> list:
     global USER_BY_ID
     return await execute(USER_BY_ID, (id,))
+
+async def userByName(name: str) -> list:
+    global USER_BY_NAME
+    return await execute(USER_BY_NAME, (name,))

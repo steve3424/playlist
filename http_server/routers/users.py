@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Form, Request, Depends
 from fastapi.responses import JSONResponse
 from ..data import db
-from ..authorization.user import checkUserId
+from ..authorization import user
 from ..authorization.models import User, AppRoles
 from ..authorization.endpoint import AuthorizeEndpoint
 
@@ -48,13 +48,24 @@ async def usersAll(
 ):
     return await db.usersAll()
 
-@router.get("/{id}")
+@router.get("/{id:int}")
 async def userById(
     request: Request,
     id: int,
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, checkUserId))
+    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user.checkUserId))
 ):
     results = await db.userById(id)
+    if not results:
+        return JSONResponse({"message": "Not Found!"}, status_code=404)
+    return results[0]
+
+@router.get("/{name:str}")
+async def userByName(
+    request: Request,
+    name: str,
+    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user.checkUserName))
+):
+    results = await db.userByName(name)
     if not results:
         return JSONResponse({"message": "Not Found!"}, status_code=404)
     return results[0]
