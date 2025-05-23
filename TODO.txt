@@ -1,7 +1,5 @@
 - log to file
 - jwt based authentication
-- role based auth
 - logout (remove auth cookie?)
 - make client sample actually have playlist
 - handle different message types in ws server
-- don't bypass auth in dev
