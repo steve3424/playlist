@@ -1,9 +1,14 @@
+import os
 from logging import Filter, LogRecord
 from contextvars import ContextVar
 
 IP_PORT: ContextVar[str] = ContextVar("ip_port", default="-")
 BAND: ContextVar[str] = ContextVar("band", default="-")
 USER_NAME: ContextVar[str] = ContextVar("user_name", default="-")
+
+LOG_FILE_DIR = os.path.join(os.path.dirname(__file__), os.pardir, "logs")
+LOG_FILE_NAME = os.path.join(LOG_FILE_DIR, "playlist.log")
+os.makedirs(LOG_FILE_DIR, exist_ok=True)
 
 class TraceFilter(Filter):
     def __init__(self):
@@ -39,18 +44,30 @@ LOGGING_CONFIG = {
             "stream": "ext://sys.stderr",
             "filters": ["trace_filter"]
         },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "DEBUG",
+            "formatter": "standard",
+            "filename": LOG_FILE_NAME,
+            "mode": "a",
+            "maxBytes": 1024*1024*10,
+            "backupCount": 5,
+            "filters": ["trace_filter"]
+        },
     },
     "loggers": { 
         "playlist": {
             "handlers": [
-                "stderr"
+                "stderr",
+                "file"
             ],
             "level": "DEBUG",
             "propagate": False
         },
         "websockets.server": {
             "handlers": [
-                "stderr"
+                "stderr",
+                "file"
             ],
             "level": "INFO",
             "propagate": False
