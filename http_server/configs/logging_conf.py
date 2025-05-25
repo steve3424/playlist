@@ -1,3 +1,4 @@
+import os
 from logging import Filter, LogRecord
 from contextvars import ContextVar
 
@@ -5,6 +6,10 @@ IP_ADDRESS: ContextVar[str] = ContextVar("ip_address", default="-")
 ENDPOINT: ContextVar[str] = ContextVar("endpoint", default="-")
 USER_NAME: ContextVar[str] = ContextVar("user_name", default="-")
 REQUEST_ID: ContextVar[str] = ContextVar("request_id", default="-")
+
+LOG_FILE_DIR = os.path.join(os.path.dirname(__file__), os.pardir, "logs")
+LOG_FILE_NAME = os.path.join(LOG_FILE_DIR, "playlist.log")
+os.makedirs(LOG_FILE_DIR, exist_ok=True)
 
 class TraceFilter(Filter):
     def __init__(self):
@@ -41,18 +46,30 @@ LOGGING_CONFIG = {
             "stream": "ext://sys.stderr",
             "filters": ["trace_filter"]
         },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "DEBUG",
+            "formatter": "standard",
+            "filename": LOG_FILE_NAME,
+            "mode": "a",
+            "maxBytes": 1024*1024*10,
+            "backupCount": 5,
+            "filters": ["trace_filter"]
+        },
     },
     "loggers": { 
         "playlist": {
             "handlers": [
-                "stderr"
+                "stderr",
+                "file"
             ],
             "level": "DEBUG",
             "propagate": False
         },
         "uvicorn.error": {
             "handlers": [
-                "stderr"
+                "stderr",
+                "file"
             ],
             "level": "INFO",
             "propagate": False
