@@ -53,13 +53,21 @@ class AESCipher:
         except Exception as ex:
             raise EncryptionError(ex) from ex
 
-def cliEncrypt(cipher: AESCipher, args: argparse.Namespace):
+def cliEncrypt(args: argparse.Namespace):
+    cipher = AESCipher(args.password.encode("utf8"), args.salt.encode("utf8"))
     cipher_text = cipher.encrypt(args.message.encode(encoding="utf8"))
     print(f"cipher_text (base16 encoded): '{base64.b16encode(cipher_text).decode(encoding="utf8")}'")
 
-def cliDecrypt(cipher: AESCipher, args: argparse.Namespace):
+def cliDecrypt(args: argparse.Namespace):
+    cipher = AESCipher(args.password.encode("utf8"), args.salt.encode("utf8"))
     message = cipher.decrypt(base64.b16decode(args.message)).decode(encoding="utf8")
     print(f"message: '{message}'")
+
+def cliGenPwdAndSalt(args: argparse.Namespace):
+    pwd = base64.b64encode(Crypto.Random.get_random_bytes(args.pwd_len)).decode("utf-8")
+    salt = base64.b64encode(Crypto.Random.get_random_bytes(args.salt_len)).decode("utf-8")
+    print(f"pwd: '{pwd}'")
+    print(f"salt: '{salt}'")
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
@@ -77,6 +85,10 @@ if __name__ == "__main__":
     decrypt_parser.add_argument("-m", "--message",  required=True)
     decrypt_parser.set_defaults(func=cliDecrypt)
 
+    decrypt_parser = sub_parsers.add_parser("gen-pwd-and-salt")
+    decrypt_parser.add_argument("--pwd-len",  default=64)
+    decrypt_parser.add_argument("--salt-len", default=16)
+    decrypt_parser.set_defaults(func=cliGenPwdAndSalt)
+
     args = arg_parser.parse_args()
-    cipher = AESCipher(args.password.encode("utf8"), args.salt.encode("utf8"))
-    args.func(cipher, args)
+    args.func(args)
