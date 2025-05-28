@@ -21,33 +21,33 @@ USER_ADD = """
 
 USERS_ALL = """
     SELECT users.name AS name,
-           roles.name AS role,
+           app_roles.name AS role,
            datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
            datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
     FROM users
-    JOIN roles
-      ON users.role_id = roles.id;
+    JOIN app_roles
+      ON users.role_id = app_roles.id;
 """
 
 USER_BY_ID = """
     SELECT users.name AS name,
-           roles.name AS role,
+           app_roles.name AS role,
            datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
            datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
     FROM users
-    JOIN roles
-      ON users.role_id = roles.id
+    JOIN app_roles
+      ON users.role_id = app_roles.id
     WHERE users.id = ?;
 """
 
 USER_BY_NAME = """
     SELECT users.name AS name,
-           roles.name AS role,
+           app_roles.name AS role,
            datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
            datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
     FROM users
-    JOIN roles
-      ON users.role_id = roles.id
+    JOIN app_roles
+      ON users.role_id = app_roles.id
     WHERE users.name = ?;
 """
 

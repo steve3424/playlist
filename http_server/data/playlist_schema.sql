@@ -1,5 +1,5 @@
 ----------------------------------------------------------------
----------------------------- USERS -----------------------------
+-- USERS -------------------------------------------------------
 ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     role_id INTEGER NOT NULL DEFAULT 0,
     created_ts INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
     updated_ts INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-    FOREIGN KEY (role_id) REFERENCES roles(id)
+    FOREIGN KEY (role_id) REFERENCES app_roles(id)
 );
 
 CREATE TRIGGER IF NOT EXISTS updated_ts_users
@@ -21,9 +21,9 @@ BEGIN
 END;
 
 ----------------------------------------------------------------
----------------------------- ROLES -----------------------------
+-- APP_ROLES ---------------------------------------------------
 ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS roles (
+CREATE TABLE IF NOT EXISTS app_roles (
     id INTEGER PRIMARY KEY,
     name VARCHAR(16) UNIQUE NOT NULL,
     created_ts INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
@@ -31,16 +31,16 @@ CREATE TABLE IF NOT EXISTS roles (
 );
 
 CREATE TRIGGER IF NOT EXISTS updated_ts_roles
-AFTER UPDATE ON roles
+AFTER UPDATE ON app_roles
 FOR EACH ROW
 BEGIN
-    UPDATE roles
+    UPDATE app_roles
     SET updated_ts = (strftime('%s', 'now'))
     WHERE id = OLD.id;
 END;
 
 -- NOTE: This much match http_server enum values!!
-INSERT OR IGNORE INTO roles
+INSERT OR IGNORE INTO app_roles
     (id, name)
 VALUES
     (0, 'user'),
