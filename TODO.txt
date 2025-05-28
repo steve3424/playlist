@@ -2,3 +2,5 @@
 - logout (remove auth cookie?)
 - make client sample actually have playlist
 - handle different message types in ws server
+- finish out db tables
+- integrate w/ google drive for storage
