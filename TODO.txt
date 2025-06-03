@@ -1,4 +1,6 @@
-- gracefully shutdown connection in client
-- when to reconnect in client
-- how to tell if client connection is dead on server side
-- gracefully shutdown server
+- jwt based authentication
+- logout (remove auth cookie?)
+- make client sample actually have playlist
+- handle different message types in ws server
+- finish out db tables
+- integrate w/ google drive for storage
