@@ -51,6 +51,18 @@ USER_BY_NAME = """
     WHERE users.name = ?;
 """
 
+USER_PASSWORD_BY_NAME = """
+    SELECT users.name AS name,
+           users.password AS password,
+           app_roles.name AS role,
+           datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
+           datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
+    FROM users
+    JOIN app_roles
+      ON users.role_id = app_roles.id
+    WHERE users.name = ?;
+"""
+
 def init():
     global DB_NAME
     DB_NAME = Path(os.path.dirname(__file__), os.pardir, "data", os.environ.get("DB_NAME"))
@@ -88,3 +100,7 @@ async def userById(id: int) -> list:
 async def userByName(name: str) -> list:
     global USER_BY_NAME
     return await execute(USER_BY_NAME, (name,))
+
+async def userAndPasswordByName(name: str) -> list:
+    global USER_PASSWORD_BY_NAME
+    return await execute(USER_PASSWORD_BY_NAME, (name,))

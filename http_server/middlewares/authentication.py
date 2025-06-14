@@ -1,7 +1,7 @@
 import logging
 import json
 from typing import Callable, Awaitable
-from fastapi import Request, Response
+from fastapi import Request, Response, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from ..authorization.models import User, AppRoles
@@ -18,23 +18,39 @@ class Authenticate(BaseHTTPMiddleware):
         request: Request,
         call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
-        try:
-            if request.headers.get("Authorization", None):
-                user_info: User = self.validateToken(request.headers["Authorization"])
-            elif request.cookies.get("Authorization", None):
-                user_info: User = self.validateToken(request.cookies["Authorization"])
-            else:
-                return JSONResponse({"message": "No authentication token found!"}, status_code=401)
+        if request.url.path == "/users/session":
+            response = await call_next(request)
+            # if response == 200:
+            #   delete any user session
+            #   create new
+            return response
+        elif request.url.path == "/users" and request.method.upper() == "POST":
+            response = await call_next(request)
+            # if response == 200:
+            #   create new
+            return response
+        else:
+            user_info = self.sessionValidate(request)
             logging_conf.USER_NAME.set(f"{user_info.name}:{user_info.id}")
             request.state.user_info = user_info
             return await call_next(request)
-        except AuthenticationError as ex:
-            LOGGER.exception(ex)
-            return JSONResponse({"message": "Unable to authenticate request!"}, status_code=401)
 
-    # TODO: finalize permission model and actually do auth
-    def validateToken(self, token: str) -> dict:
-        try:
-            return json.loads(token)
-        except Exception as ex:
-            raise AuthenticationError(ex) from ex
+    def sessionValidate(self, request: Request) -> User:
+        session_id = request.headers.get("Authorization", None)
+        if not session_id:
+            session_id = request.cookies.get("Authorization", None)
+        if not session_id:
+            raise HTTPException(401, "Missing session id!")
+        # TODO: check session in redis and return user
+
+    def sessionCreate(self, user_info: User) -> str:
+        pass
+
+    def sessionGetById(self, session_id: str) -> bool:
+        pass
+
+    def sessionGetByUser(self, user_id: int) -> bool:
+        pass
+
+    def sessionRefresh(self, session_id: str) -> None:
+        pass
