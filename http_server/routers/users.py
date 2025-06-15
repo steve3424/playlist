@@ -3,12 +3,13 @@ import logging
 import bcrypt
 import base64
 from typing import Annotated
-from fastapi import APIRouter, Form, Request, Depends
+from fastapi import APIRouter, Form, Depends
 from fastapi.responses import JSONResponse
 from ..data import db
 from ..authorization import user as user_auth
 from ..authorization.models import User, AppRoles
 from ..authorization.endpoint import AuthorizeEndpoint
+from ..middlewares import authentication
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 PASSWORD_MIN_LEN = 8
@@ -45,14 +46,13 @@ async def register(
 
 @router.get("")
 async def usersAll(
-    request: Request,
     user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
 ):
     return await db.usersAll()
 
+# NOTE: int path must come before str path!!
 @router.get("/{id:int}")
 async def userById(
-    request: Request,
     id: int,
     user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserId))
 ):
@@ -63,7 +63,6 @@ async def userById(
 
 @router.get("/{name:str}")
 async def userByName(
-    request: Request,
     name: str,
     user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserName))
 ):
@@ -85,3 +84,42 @@ async def login(
         return JSONResponse({"message": "User name or password incorrect!"}, status_code=401)
     del user["password"]
     return user
+
+@router.get("/sessions")
+async def sessionsAll(
+    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
+):
+    raise NotImplementedError()
+
+# NOTE: int path must come before str path!!
+@router.get("/sessions/{user_id:int}")
+async def sessionByUserId(
+    user_id: int,
+    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
+):
+    results = await db.userById(user_id)
+    if not results:
+        return JSONResponse({"message": "Not Found!"}, status_code=404)
+    user_info = dict(results[0])
+    user_info["role"] = AppRoles[user_info["role"]]
+    user_info = User.model_validate(user_info)
+    user_info, session_id = await authentication.sessionGet(user_info=user_info)
+    if not user_info:
+        return JSONResponse({"message": "Not Found!"}, status_code=404)
+    user_info = user_info.model_dump()
+    user_info["role"] = AppRoles(user_info["role"]).name
+    user_info["session_id"] = session_id
+    return user_info
+
+@router.get("/sessions/{session_id:str}")
+async def sessionById(
+    session_id: str,
+    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
+):
+    user_info, session_id = await authentication.sessionGet(session_id=session_id)
+    if not user_info:
+        return JSONResponse({"message": "Not Found!"}, status_code=404)
+    user_info = user_info.model_dump()
+    user_info["role"] = AppRoles(user_info["role"]).name
+    user_info["session_id"] = session_id
+    return user_info
