@@ -42,7 +42,9 @@ class Authenticate(BaseHTTPMiddleware):
         call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         try:
-            if request.url.path == "/users/sessions" and request.method.upper() == "POST":
+            if request.url.path == "/docs" and request.method.upper() == "GET":
+                return await call_next(request)
+            elif request.url.path == "/users/sessions" and request.method.upper() == "POST":
                 response = await call_next(request)
                 if response.status_code == 200:
                     user_info = await self.userFromResponseBody(response)
