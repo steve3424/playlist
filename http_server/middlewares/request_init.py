@@ -31,7 +31,8 @@ class InitMiddleware(BaseHTTPMiddleware):
             # NOTE: we may want to raise this from our application code.
             #       we don't want to wrap this in 500 error as we do with
             #       other unhandled exceptions.
-            raise ex
+            LOGGER.exception(ex)
+            return JSONResponse(ex.detail, ex.status_code) 
         except Exception as ex:
             LOGGER.exception(ex)
             return JSONResponse({"message": "Something went wrong"}, status_code=500)

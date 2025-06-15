@@ -1,5 +1,13 @@
-- jwt based authentication
-- logout (remove auth cookie?)
+- redis transactions
+- redis namespaces
+- discuss how song updates will be shared live
+    - can full list be shared?
+      what if new user joins, shares empty list, and
+      this deletes other users lists
+    - should we only share updates by default?
+    - multiple modes: update/full
+    - up next vs add to end of list
+- web security headers
 - make client sample actually have playlist
 - handle different message types in ws server
 - finish out db tables

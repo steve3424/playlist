@@ -20,7 +20,8 @@ USER_ADD = """
 """
 
 USERS_ALL = """
-    SELECT users.name AS name,
+    SELECT users.id AS id,
+           users.name AS name,
            app_roles.name AS role,
            datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
            datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
@@ -30,7 +31,8 @@ USERS_ALL = """
 """
 
 USER_BY_ID = """
-    SELECT users.name AS name,
+    SELECT users.id AS id,
+           users.name AS name,
            app_roles.name AS role,
            datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
            datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
@@ -41,7 +43,21 @@ USER_BY_ID = """
 """
 
 USER_BY_NAME = """
-    SELECT users.name AS name,
+    SELECT users.id AS id,
+           users.name AS name,
+           app_roles.name AS role,
+           datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
+           datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
+    FROM users
+    JOIN app_roles
+      ON users.role_id = app_roles.id
+    WHERE users.name = ?;
+"""
+
+USER_PASSWORD_BY_NAME = """
+    SELECT users.id AS id,
+           users.name AS name,
+           users.password AS password,
            app_roles.name AS role,
            datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
            datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
@@ -88,3 +104,7 @@ async def userById(id: int) -> list:
 async def userByName(name: str) -> list:
     global USER_BY_NAME
     return await execute(USER_BY_NAME, (name,))
+
+async def userAndPasswordByName(name: str) -> list:
+    global USER_PASSWORD_BY_NAME
+    return await execute(USER_PASSWORD_BY_NAME, (name,))
