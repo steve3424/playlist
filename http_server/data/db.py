@@ -20,7 +20,8 @@ USER_ADD = """
 """
 
 USERS_ALL = """
-    SELECT users.name AS name,
+    SELECT users.id AS id,
+           users.name AS name,
            app_roles.name AS role,
            datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
            datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
@@ -30,7 +31,8 @@ USERS_ALL = """
 """
 
 USER_BY_ID = """
-    SELECT users.name AS name,
+    SELECT users.id AS id,
+           users.name AS name,
            app_roles.name AS role,
            datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
            datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
@@ -41,7 +43,8 @@ USER_BY_ID = """
 """
 
 USER_BY_NAME = """
-    SELECT users.name AS name,
+    SELECT users.id AS id,
+           users.name AS name,
            app_roles.name AS role,
            datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
            datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
@@ -52,7 +55,8 @@ USER_BY_NAME = """
 """
 
 USER_PASSWORD_BY_NAME = """
-    SELECT users.name AS name,
+    SELECT users.id AS id,
+           users.name AS name,
            users.password AS password,
            app_roles.name AS role,
            datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
