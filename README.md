@@ -7,6 +7,7 @@ insert cool logo and description here
 ## Setup
 Install redis: https://redis.io/docs/latest/operate/oss_and_stack/install/archive/install-redis/install-redis-on-linux/
 
+Install sqlite3: https://www.sqlite.org/download.html
 
 To start processes locally:
 ```
