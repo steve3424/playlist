@@ -39,25 +39,9 @@ async def register(
     password_enc = base64.b64encode(bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())).decode("utf-8")
 
     await db.userAdd(user_name, password_enc)
-    return JSONResponse({"message": f"Welcome {user_name}!"})
-
-@router.post("/session")
-async def login(
-    user_name: Annotated[str, Form()],
-    password: Annotated[str, Form()],
-):
-    results = await db.userAndPasswordByName(user_name)
-    if not results:
-        return JSONResponse({"message": "User name or password incorrect!"}, status_code=401)
-    user = results[0]
-    if not bcrypt.checkpw(password.encode("utf-8"), base64.b64decode(user["password"])):
-        return JSONResponse({"message": "User name or password incorrect!"}, status_code=401)
-    return {
-        "name": user["name"],
-        "role": user["role"],
-        "created_ts": user["created_ts"],
-        "updated_ts": user["updated_ts"],
-    }
+    # NOTE: We want the exact timestamps from db so we make an extra call here.
+    user = await db.userByName(user_name)
+    return user[0]
 
 @router.get("")
 async def usersAll(
@@ -87,3 +71,17 @@ async def userByName(
     if not results:
         return JSONResponse({"message": "Not Found!"}, status_code=404)
     return results[0]
+
+@router.post("/sessions")
+async def login(
+    user_name: Annotated[str, Form()],
+    password: Annotated[str, Form()],
+):
+    results = await db.userAndPasswordByName(user_name)
+    if not results:
+        return JSONResponse({"message": "User name or password incorrect!"}, status_code=401)
+    user = dict(results[0])
+    if not bcrypt.checkpw(password.encode("utf-8"), base64.b64decode(user["password"])):
+        return JSONResponse({"message": "User name or password incorrect!"}, status_code=401)
+    del user["password"]
+    return user
