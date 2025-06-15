@@ -8,7 +8,6 @@
     - multiple modes: update/full
     - up next vs add to end of list
 - web security headers
-- session apis
 - make client sample actually have playlist
 - handle different message types in ws server
 - finish out db tables
