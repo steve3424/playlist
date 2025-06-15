@@ -32,6 +32,9 @@ async def appLife(app: fastapi.FastAPI, *args, **kwargs):
         LOGGER.warning("Failed to load environment file!")
     await tickets.init(kwargs["redis_host"], kwargs["redis_port"])
     db.init()
+    auth_init = await authentication.init(kwargs["redis_host"], kwargs["redis_port"])
+    if not auth_init:
+        raise Exception("Auth failed to initialize!")
 
     yield
 
