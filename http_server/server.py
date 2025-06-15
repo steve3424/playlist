@@ -58,10 +58,10 @@ if __name__ == "__main__":
             environment=args.environment
         )
     )
-    app.add_middleware(request_init.InitMiddleware)
     app.add_middleware(authentication.Authenticate)
+    app.add_middleware(request_init.InitMiddleware)
     app.add_api_route("/health", health)
-    app.include_router(bands.router)
     app.include_router(users.router)
+    app.include_router(bands.router)
 
     uvicorn.run(app, host=args.host, port=args.port, log_config=LOGGING_CONFIG)
