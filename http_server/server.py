@@ -40,6 +40,7 @@ async def appLife(app: fastapi.FastAPI, *args, **kwargs):
 
     LOGGER.info("Shutting down server...")
     await tickets.shutdown()
+    await authentication.shutdown()
 
 def health() -> PlainTextResponse:
     return PlainTextResponse("healthy")

@@ -32,6 +32,13 @@ async def init(host: str, port: int):
         LOGGER.error(ex)
         return False
 
+async def shutdown() -> None:
+    global SESSION_CLIENT
+    if SESSION_CLIENT:
+        LOGGER.info("Shutting down auth client...")
+        await SESSION_CLIENT.aclose()
+        SESSION_CLIENT = None
+
 class AuthenticationError(Exception):
     pass
 
