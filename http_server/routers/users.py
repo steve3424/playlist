@@ -17,7 +17,7 @@ PASSWORD_MAX_LEN = 32
 USERNAME_MIN_LEN = 1
 USERNAME_MAX_LEN = 32
 
-router = APIRouter(prefix="/users")
+router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post("")
 async def register(

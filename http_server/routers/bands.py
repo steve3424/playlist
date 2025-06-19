@@ -7,7 +7,7 @@ from ..authorization.endpoint import AuthorizeEndpoint
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 
-router = APIRouter(prefix="/band")
+router = APIRouter(prefix="/bands", tags=["bands"])
 
 @router.get("/ticket")
 async def ticket(
