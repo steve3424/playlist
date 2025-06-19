@@ -21,7 +21,7 @@ class InitMiddleware(BaseHTTPMiddleware):
         try:
             time_start_request = time.perf_counter()
             logging_conf.IP_ADDRESS.set(request.client.host)
-            logging_conf.ENDPOINT.set(request.url.path)
+            logging_conf.ENDPOINT.set(f"{request.method}:{request.url.path}")
             logging_conf.REQUEST_ID.set(uuid4().hex)
             LOGGER.info("Requesting...")
             result = await call_next(request)
