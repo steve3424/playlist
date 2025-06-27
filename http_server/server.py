@@ -14,7 +14,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from .middlewares import authentication, request_init, security_headers
-from .routers import bands, users
+from .routers import bands, users, sessions
 from .data import db
 from common import tickets
 
@@ -67,6 +67,7 @@ if __name__ == "__main__":
     app.add_middleware(request_init.InitMiddleware)
     app.add_api_route("/health", health)
     app.include_router(users.router)
+    app.include_router(sessions.router)
     app.include_router(bands.router)
 
     uvicorn.run(app, host=args.host, port=args.port, log_config=LOGGING_CONFIG)
