@@ -9,6 +9,7 @@ from .encryption import AESCipher
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 CLIENT: redis.Redis = None
 TICKET_TTL = 10 # seconds
+TICKET_PREFIX = "ticket"
 CIPHER = None
 
 class TicketError(Exception):
@@ -65,13 +66,14 @@ async def redeem(ticket_enc: str) -> Ticket:
     Decrypts ticket, checks against cache, and returns ticket object.
     """
     global CIPHER
+    global TICKET_PREFIX
     try:
         ticket = Ticket.model_validate_json(
             CIPHER.decrypt(
                 base64.b16decode(ticket_enc)
             ).decode(encoding="utf-8")
         )
-        cached_ticket = await CLIENT.get(str(ticket))
+        cached_ticket = await CLIENT.get(f"{TICKET_PREFIX}:{str(ticket)}")
         if not cached_ticket:
             raise ValueError("Ticket not found in cache!")
         elif ticket_enc != cached_ticket:
@@ -86,12 +88,13 @@ async def create(user_name: str, band: str) -> str:
     """
     global TICKET_TTL
     global CIPHER
+    global TICKET_PREFIX
     try:
         ticket = Ticket(
             user_name=user_name,
             band=band
         )
-        ticket_key = str(ticket)
+        ticket_key = f"{TICKET_PREFIX}:{str(ticket)}"
         ticket_enc = base64.b16encode(
             CIPHER.encrypt(
                 ticket.model_dump_json().encode("utf-8")
