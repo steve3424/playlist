@@ -1,4 +1,3 @@
-import os
 import logging
 import bcrypt
 import base64
@@ -9,7 +8,6 @@ from ..data import db
 from ..authorization import user as user_auth
 from ..authorization.models import User, AppRoles
 from ..authorization.endpoint import AuthorizeEndpoint
-from ..middlewares import authentication
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 PASSWORD_MIN_LEN = 8
@@ -45,24 +43,19 @@ async def register(
     return user[0]
 
 @router.get("")
-async def usersAll(
+async def all(
     user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
 ):
     return await db.usersAll()
 
-# NOTE: int path must come before str path!!
-@router.get("/{id:int}")
-async def userById(
-    id: int,
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserId))
+@router.delete("/{name}")
+async def deleteAccount(
+    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
 ):
-    results = await db.userById(id)
-    if not results:
-        return JSONResponse({"message": "Not Found!"}, status_code=404)
-    return results[0]
+    raise NotImplementedError()
 
-@router.get("/{name:str}")
-async def userByName(
+@router.get("/{name}")
+async def getUser(
     name: str,
     user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserName))
 ):
@@ -70,56 +63,3 @@ async def userByName(
     if not results:
         return JSONResponse({"message": "Not Found!"}, status_code=404)
     return results[0]
-
-@router.post("/sessions")
-async def login(
-    user_name: Annotated[str, Form()],
-    password: Annotated[str, Form()],
-):
-    results = await db.userAndPasswordByName(user_name)
-    if not results:
-        return JSONResponse({"message": "User name or password incorrect!"}, status_code=401)
-    user = dict(results[0])
-    if not bcrypt.checkpw(password.encode("utf-8"), base64.b64decode(user["password"])):
-        return JSONResponse({"message": "User name or password incorrect!"}, status_code=401)
-    del user["password"]
-    return user
-
-@router.get("/sessions")
-async def sessionsAll(
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
-):
-    raise NotImplementedError()
-
-# NOTE: int path must come before str path!!
-@router.get("/sessions/{user_id:int}")
-async def sessionByUserId(
-    user_id: int,
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
-):
-    results = await db.userById(user_id)
-    if not results:
-        return JSONResponse({"message": "Not Found!"}, status_code=404)
-    user_info = dict(results[0])
-    user_info["role"] = AppRoles[user_info["role"]]
-    user_info = User.model_validate(user_info)
-    user_info, session_id = await authentication.sessionGet(user_info=user_info)
-    if not user_info:
-        return JSONResponse({"message": "Not Found!"}, status_code=404)
-    user_info = user_info.model_dump()
-    user_info["role"] = AppRoles(user_info["role"]).name
-    user_info["session_id"] = session_id
-    return user_info
-
-@router.get("/sessions/{session_id:str}")
-async def sessionById(
-    session_id: str,
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
-):
-    user_info, session_id = await authentication.sessionGet(session_id=session_id)
-    if not user_info:
-        return JSONResponse({"message": "Not Found!"}, status_code=404)
-    user_info = user_info.model_dump()
-    user_info["role"] = AppRoles(user_info["role"]).name
-    user_info["session_id"] = session_id
-    return user_info
