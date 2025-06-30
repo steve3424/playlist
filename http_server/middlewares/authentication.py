@@ -13,7 +13,7 @@ from ..configs import logging_conf
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 SESSION_COOKIE_NAME = "SESSIONID"
 SESSION_PREFIX = "session"
-SESSION_TTL = 60 * 60 # * 24 * 7 # seconds per week
+SESSION_TTL = 60 * 60 * 24 * 7 # seconds per week
 SESSION_CLIENT: redis.Redis = None
 
 async def init(host: str, port: int):
