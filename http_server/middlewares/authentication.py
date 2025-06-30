@@ -49,31 +49,34 @@ class Authenticate(BaseHTTPMiddleware):
         call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         try:
-            if (
-                (request.url.path == "/docs" and request.method.upper() == "GET") or
-                (request.url.path == "/openapi.json" and request.method.upper() == "GET")
-            ):
-                return await call_next(request)
-            elif request.url.path == "/users/sessions" and request.method.upper() == "POST":
+            open_endpoints = {
+                "GET:/docs",
+                "GET:/openapi.json",
+                "GET:/health",
+            }
+            login_endpoint = "POST:/sessions"
+            register_endpoint = "POST:/users"
+
+            requested_endpoint = f"{request.method}:{request.url.path}"
+            if requested_endpoint in open_endpoints:
+                response = await call_next(request)
+            elif requested_endpoint == login_endpoint:
                 response = await call_next(request)
                 if response.status_code == 200:
                     user_info = await self.userFromResponseBody(response)
-                    await sessionDelete(user_info=user_info)
-                    session_id = await sessionCreate(user_info)
-                    self.setSessionCookie(response, session_id)
-                return response
-            elif request.url.path == "/users" and request.method.upper() == "POST":
+                    await sessionDelete(user_info.name)
+                    await sessionCreate(user_info, response)
+            elif requested_endpoint == register_endpoint:
                 response = await call_next(request)
                 if response.status_code == 200:
                     user_info = await self.userFromResponseBody(response)
-                    session_id = await sessionCreate(user_info)
-                    self.setSessionCookie(response, session_id)
-                return response
+                    await sessionCreate(user_info, response)
             else:
                 user_info = await sessionValidate(request)
-                logging_conf.USER_NAME.set(f"{user_info.name}:{user_info.id}")
+                logging_conf.USER_NAME.set(user_info.name)
                 request.state.user_info = user_info
-                return await call_next(request)
+                response = await call_next(request)
+            return response
         except AuthenticationError as ex:
             LOGGER.exception(ex)
             return JSONResponse({"message": str(ex)}, status_code=401)
@@ -81,62 +84,67 @@ class Authenticate(BaseHTTPMiddleware):
     async def userFromResponseBody(self, response: Response) -> User:
         response_body = [chunk async for chunk in response.body_iterator]
         response.body_iterator = iterate_in_threadpool(iter(response_body))
-        user_info = json.loads(b''.join(response_body))
-        user_info["role"] = AppRoles[user_info["role"]]
-        return User.model_validate(user_info)
+        return User.model_validate_json(b''.join(response_body))
 
-    def setSessionCookie(self, response: Response, session_id: str):
-        global SESSION_COOKIE_NAME
-        response.set_cookie(SESSION_COOKIE_NAME, session_id, secure=True, httponly=True, samesite="strict")
-
-async def sessionCreate(user_info: User) -> str:
+async def sessionCreate(user_info: User, response: Response) -> None:
     global SESSION_CLIENT
     global SESSION_PREFIX
+    global SESSION_COOKIE_NAME
+
     session_id = str(uuid.uuid4())
+    user_info.session_id = session_id
     session_user_key = f"{SESSION_PREFIX}:{session_id}"
-    user_session_key = f"{SESSION_PREFIX}:{user_info.id}"
+    user_session_key = f"{SESSION_PREFIX}:{user_info.name}"
+
     # TODO: transactions
     await SESSION_CLIENT.set(session_user_key, user_info.model_dump_json())
     await SESSION_CLIENT.expire(session_user_key, SESSION_TTL)
-    await SESSION_CLIENT.set(user_session_key, session_id)
+    await SESSION_CLIENT.set(user_session_key, user_info.model_dump_json())
     await SESSION_CLIENT.expire(user_session_key, SESSION_TTL)
-    return session_id
 
-async def sessionDelete(user_info: User | None=None, session_id: str | None=None) -> None:
+    response.set_cookie(SESSION_COOKIE_NAME, session_id, secure=True, httponly=True, samesite="strict")
+
+async def sessionGet(id: str) -> User | None:
     global SESSION_CLIENT
     global SESSION_PREFIX
-    user_info, session_id = await sessionGet(user_info, session_id)
-    session_user_key = f"{SESSION_PREFIX}:{session_id}"
-    user_session_key = f"{SESSION_PREFIX}:{user_info.id}"
-    # TODO: transactions
-    await SESSION_CLIENT.delete(session_user_key)
-    await SESSION_CLIENT.delete(user_session_key)
 
-async def sessionGet(user_info: User | None=None, session_id: str | None=None) -> tuple[User, str]:
+    user_info = await SESSION_CLIENT.get(f"{SESSION_PREFIX}:{id}")
+    if user_info:
+        user_info = User.model_validate_json(user_info)
+    return user_info
+
+async def sessionDelete(id: str) -> None:
     global SESSION_CLIENT
     global SESSION_PREFIX
-    if not user_info and not session_id:
-        raise ValueError("I need user_info or session_id!")
-    elif not user_info:
-        user_info = await SESSION_CLIENT.get(f"{SESSION_PREFIX}:{session_id}")
-        if user_info:
-            user_info = User.model_validate_json(user_info)
-        return user_info, session_id
-    elif not session_id:
-        session_id = await SESSION_CLIENT.get(f"{SESSION_PREFIX}:{user_info.id}")
-        return user_info, session_id
-    else:
-        return user_info, session_id
+
+    user_info = await sessionGet(id)
+    if user_info:
+        # TODO: transactions
+        await SESSION_CLIENT.delete(f"{SESSION_PREFIX}:{user_info.session_id}")
+        await SESSION_CLIENT.delete(f"{SESSION_PREFIX}:{user_info.name}")
+
+async def sessionAll() -> list[User]:
+    global SESSION_CLIENT
+
+    all_sessions = set()
+    cursor = '0'
+    while cursor != 0:
+        cursor, keys = await SESSION_CLIENT.scan(cursor=cursor, count=10000)
+        values = await SESSION_CLIENT.mget(*keys)
+        for i,val in enumerate(values):
+            all_sessions.add(User.model_validate_json(val))
+    return list(all_sessions)
 
 async def sessionValidate(request: Request) -> User:
     global SESSION_COOKIE_NAME
+
     session_id = request.headers.get("Authorization", None)
     if not session_id:
         session_id = request.cookies.get(SESSION_COOKIE_NAME, None)
     if not session_id:
         raise AuthenticationError("Session id not found in request!")
 
-    user_info, session_id = await sessionGet(session_id=session_id)
+    user_info = await sessionGet(session_id)
     if not user_info:
         raise AuthenticationError("Invalid session id!")
     return user_info
