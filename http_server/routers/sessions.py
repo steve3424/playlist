@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Form, Depends
 from fastapi.responses import JSONResponse
 from ..data import db
+from ..authorization import user as user_auth
 from ..authorization.models import User, AppRoles
 from ..authorization.endpoint import AuthorizeEndpoint
 from ..middlewares import authentication
@@ -32,24 +33,19 @@ async def all(
     user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
 ):
     return await authentication.sessionAll()
-    # raise NotImplementedError()
 
 @router.delete("/{name}")
 async def logout(
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
+    name: str,
+    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserName))
 ):
-    raise NotImplementedError()
+    await authentication.sessionDelete(name)
+    return JSONResponse({"message": f"'{name}' logged out!"}, status_code=200)
 
+# TODO: allow session_id and create new auth method to check name/session_id
 @router.get("/{name}")
 async def userSession(
-    session_id: str,
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user))
+    name: str,
+    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserName))
 ):
-    raise NotImplementedError()
-    # user_info, session_id = await authentication.sessionGet(session_id=session_id)
-    # if not user_info:
-    #     return JSONResponse({"message": "Not Found!"}, status_code=404)
-    # user_info = user_info.model_dump()
-    # user_info["role"] = AppRoles(user_info["role"]).name
-    # user_info["session_id"] = session_id
-    # return user_info
+    return await authentication.sessionGet(name)
