@@ -1,3 +1,9 @@
 @echo off
 
-sqlite3 http_server\data\playlist_%1.db < http_server\data\playlist_schema.sql
+IF "%~1" == "" (
+    echo Please specify db name!
+) ELSE (
+    SET DB_NAME=http_server\data\playlist_%1.db
+    sqlite3 %DB_NAME% < http_server\data\playlist_schema.sql
+    echo Created db at '%DB_NAME%'!
+)
