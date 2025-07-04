@@ -65,6 +65,7 @@ async def redeem(ticket_enc: str) -> Ticket:
     """
     Decrypts ticket, checks against cache, and returns ticket object.
     """
+    global CLIENT
     global CIPHER
     global TICKET_PREFIX
     try:
@@ -73,11 +74,13 @@ async def redeem(ticket_enc: str) -> Ticket:
                 base64.b16decode(ticket_enc)
             ).decode(encoding="utf-8")
         )
-        cached_ticket = await CLIENT.get(f"{TICKET_PREFIX}:{str(ticket)}")
+        ticket_key = f"{TICKET_PREFIX}:{str(ticket)}"
+        cached_ticket = await CLIENT.get(ticket_key)
         if not cached_ticket:
             raise ValueError("Ticket not found in cache!")
         elif ticket_enc != cached_ticket:
             raise ValueError(f"Ticket received '{ticket_enc}' does not match cached ticket '{cached_ticket}'!")
+        await CLIENT.delete(ticket_key)
         return ticket
     except Exception as ex:
         raise TicketError(ex) from ex
@@ -102,6 +105,7 @@ async def create(user_name: str, band: str) -> str:
         ).decode(
             encoding="utf-8"
         )
+        # TODO: transactions
         await CLIENT.set(ticket_key, ticket_enc)
         await CLIENT.expire(ticket_key, TICKET_TTL)
         return ticket_enc
