@@ -19,6 +19,7 @@ class AuthorizeEndpoint:
             raise HTTPException(403, "Unauthorized!")
         elif user_info.role < max(e.value for e in AppRoles):
             if not self.endpoint_authorization:
+                LOGGER.error("User level permissions must have further authorizations!")
                 raise HTTPException(500, "Internal server error")
             self.endpoint_authorization(request, user_info)
         return user_info
