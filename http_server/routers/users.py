@@ -8,6 +8,8 @@ from ..data import db
 from ..authorization import user as user_auth
 from ..authorization.models import User, AppRoles
 from ..authorization.endpoint import AuthorizeEndpoint
+from ..middlewares import authentication
+
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 PASSWORD_MIN_LEN = 8
@@ -50,9 +52,15 @@ async def all(
 
 @router.delete("/{name}")
 async def deleteAccount(
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
+    name: str,
+    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserName))
 ):
-    raise NotImplementedError()
+    # TODO: do we delete all resources associated w/ this account?
+    await authentication.sessionDelete(name)
+    rows_deleted = await db.deleteUser(name)
+    if rows_deleted == 0:
+        return JSONResponse({"message": f"'{name}' not found!"}, status_code=404)
+    return JSONResponse({"message": f"'{name}' deleted!"}, status_code=200)
 
 @router.get("/{name}")
 async def getUser(
