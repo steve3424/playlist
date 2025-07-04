@@ -67,6 +67,11 @@ USER_PASSWORD_BY_NAME = """
     WHERE users.name = ?;
 """
 
+DELETE_USER = """
+    DELETE FROM users
+    WHERE name = ?;
+"""
+
 def init():
     global DB_NAME
     DB_NAME = Path(os.path.dirname(__file__), os.pardir, "data", os.environ.get("DB_NAME"))
@@ -108,3 +113,7 @@ async def userByName(name: str) -> list:
 async def userAndPasswordByName(name: str) -> list:
     global USER_PASSWORD_BY_NAME
     return await execute(USER_PASSWORD_BY_NAME, (name,))
+
+async def deleteUser(name: str) -> int:
+    global DELETE_USER
+    return await execute(DELETE_USER, (name,))
