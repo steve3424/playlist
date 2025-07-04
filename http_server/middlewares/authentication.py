@@ -96,11 +96,12 @@ async def sessionCreate(user_info: User, response: Response) -> None:
     session_user_key = f"{SESSION_PREFIX}:{session_id}"
     user_session_key = f"{SESSION_PREFIX}:{user_info.name}"
 
-    # TODO: transactions
-    await SESSION_CLIENT.set(session_user_key, user_info.model_dump_json())
-    await SESSION_CLIENT.expire(session_user_key, SESSION_TTL)
-    await SESSION_CLIENT.set(user_session_key, user_info.model_dump_json())
-    await SESSION_CLIENT.expire(user_session_key, SESSION_TTL)
+    transaction = SESSION_CLIENT.pipeline(transaction=True)
+    await transaction.set(session_user_key, user_info.model_dump_json())
+    await transaction.expire(session_user_key, SESSION_TTL)
+    await transaction.set(user_session_key, user_info.model_dump_json())
+    await transaction.expire(user_session_key, SESSION_TTL)
+    await transaction.execute()
 
     response.set_cookie(SESSION_COOKIE_NAME, session_id, secure=True, httponly=True, samesite="strict")
 
@@ -119,9 +120,10 @@ async def sessionDelete(id: str) -> None:
 
     user_info = await sessionGet(id)
     if user_info:
-        # TODO: transactions
-        await SESSION_CLIENT.delete(f"{SESSION_PREFIX}:{user_info.session_id}")
-        await SESSION_CLIENT.delete(f"{SESSION_PREFIX}:{user_info.name}")
+        transaction = SESSION_CLIENT.pipeline(transaction=True)
+        await transaction.delete(f"{SESSION_PREFIX}:{user_info.session_id}")
+        await transaction.delete(f"{SESSION_PREFIX}:{user_info.name}")
+        await transaction.execute()
 
 async def sessionAll() -> list[User]:
     global SESSION_CLIENT

@@ -105,9 +105,11 @@ async def create(user_name: str, band: str) -> str:
         ).decode(
             encoding="utf-8"
         )
-        # TODO: transactions
-        await CLIENT.set(ticket_key, ticket_enc)
-        await CLIENT.expire(ticket_key, TICKET_TTL)
+
+        transaction = CLIENT.pipeline(transaction=True)
+        await transaction.set(ticket_key, ticket_enc)
+        await transaction.expire(ticket_key, TICKET_TTL)
+        await transaction.execute()
         return ticket_enc
     except Exception as ex:
         raise TicketError(ex) from ex
