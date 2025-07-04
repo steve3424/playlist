@@ -6,7 +6,7 @@ from .models import User, AppRoles
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 
 class AuthorizeEndpoint:
-    def __init__(self, role: AppRoles, endpoint_authorization: Callable):
+    def __init__(self, role: AppRoles, endpoint_authorization: Callable | None=None):
         self.role = role
         self.endpoint_authorization = endpoint_authorization
 
