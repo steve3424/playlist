@@ -84,7 +84,7 @@ async def init():
                 await db.executescript(schema_file)
             LOGGER.info(f"DB created at '{DB_NAME}'!")
         else:
-            LOGGER.info(f"Using db at '{DB_NAME}'!")
+            LOGGER.info(f"DB found at '{DB_NAME}'!")
     except Exception as ex:
         LOGGER.error(f"Failed to create db file at '{DB_NAME}': {ex}")
 
