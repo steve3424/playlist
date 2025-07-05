@@ -67,6 +67,11 @@ USER_PASSWORD_BY_NAME = """
     WHERE users.name = ?;
 """
 
+DELETE_USER = """
+    DELETE FROM users
+    WHERE name = ?;
+"""
+
 def init():
     global DB_NAME
     DB_NAME = Path(os.path.dirname(__file__), os.pardir, "data", os.environ.get("DB_NAME"))
@@ -89,9 +94,7 @@ async def userExists(user_name: str) -> bool:
 
 async def userAdd(user_name: str, password: str) -> int:
     global USER_ADD
-    result = await execute(USER_ADD, (user_name, password))
-    if result != 1:
-        raise Exception(f"Error adding user. Rows affected is {result}!")
+    await execute(USER_ADD, (user_name, password))
 
 async def usersAll() -> list:
     global USERS_ALL
@@ -108,3 +111,7 @@ async def userByName(name: str) -> list:
 async def userAndPasswordByName(name: str) -> list:
     global USER_PASSWORD_BY_NAME
     return await execute(USER_PASSWORD_BY_NAME, (name,))
+
+async def deleteUser(name: str) -> int:
+    global DELETE_USER
+    return await execute(DELETE_USER, (name,))

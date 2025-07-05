@@ -1,7 +1,7 @@
-import os
 import logging
 import bcrypt
 import base64
+from sqlite3.dbapi2 import IntegrityError
 from typing import Annotated
 from fastapi import APIRouter, Form, Depends
 from fastapi.responses import JSONResponse
@@ -10,6 +10,7 @@ from ..authorization import user as user_auth
 from ..authorization.models import User, AppRoles
 from ..authorization.endpoint import AuthorizeEndpoint
 from ..middlewares import authentication
+
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 PASSWORD_MIN_LEN = 8
@@ -29,8 +30,6 @@ async def register(
     user_name = user_name.strip()
     if len(user_name) < USERNAME_MIN_LEN or USERNAME_MAX_LEN < len(user_name):
         return JSONResponse({"message": f"Username length must be {USERNAME_MIN_LEN} <= and <= {USERNAME_MAX_LEN}!"}, status_code=422)
-    if await db.userExists(user_name):
-        return JSONResponse({"message": f"Username '{user_name}' already taken!"}, status_code=422)
 
     if not password:
         return JSONResponse({"message": "Password can't be empty!"}, status_code=422)
@@ -39,30 +38,34 @@ async def register(
         return JSONResponse({"message": f"Password length must be {PASSWORD_MIN_LEN} <= and <= {PASSWORD_MAX_LEN}!"}, status_code=422)
     password_enc = base64.b64encode(bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())).decode("utf-8")
 
-    await db.userAdd(user_name, password_enc)
-    # NOTE: We want the exact timestamps from db so we make an extra call here.
-    user = await db.userByName(user_name)
-    return user[0]
+    try:
+        await db.userAdd(user_name, password_enc)
+        # NOTE: We want the exact timestamps from db so we make an extra call here.
+        user = await db.userByName(user_name)
+        return user[0]
+    except IntegrityError as ex:
+        return JSONResponse({"message": f"Username '{user_name}' already taken!"}, status_code=422)
 
 @router.get("")
-async def usersAll(
+async def all(
     user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
 ):
     return await db.usersAll()
 
-# NOTE: int path must come before str path!!
-@router.get("/{id:int}")
-async def userById(
-    id: int,
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserId))
+@router.delete("/{name}")
+async def deleteAccount(
+    name: str,
+    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserName))
 ):
-    results = await db.userById(id)
-    if not results:
-        return JSONResponse({"message": "Not Found!"}, status_code=404)
-    return results[0]
+    # TODO: do we delete all resources associated w/ this account?
+    await authentication.sessionDelete(name)
+    rows_deleted = await db.deleteUser(name)
+    if rows_deleted == 0:
+        return JSONResponse({"message": f"'{name}' not found!"}, status_code=404)
+    return JSONResponse({"message": f"'{name}' deleted!"}, status_code=200)
 
-@router.get("/{name:str}")
-async def userByName(
+@router.get("/{name}")
+async def getUser(
     name: str,
     user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserName))
 ):
@@ -70,56 +73,3 @@ async def userByName(
     if not results:
         return JSONResponse({"message": "Not Found!"}, status_code=404)
     return results[0]
-
-@router.post("/sessions")
-async def login(
-    user_name: Annotated[str, Form()],
-    password: Annotated[str, Form()],
-):
-    results = await db.userAndPasswordByName(user_name)
-    if not results:
-        return JSONResponse({"message": "User name or password incorrect!"}, status_code=401)
-    user = dict(results[0])
-    if not bcrypt.checkpw(password.encode("utf-8"), base64.b64decode(user["password"])):
-        return JSONResponse({"message": "User name or password incorrect!"}, status_code=401)
-    del user["password"]
-    return user
-
-@router.get("/sessions")
-async def sessionsAll(
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
-):
-    raise NotImplementedError()
-
-# NOTE: int path must come before str path!!
-@router.get("/sessions/{user_id:int}")
-async def sessionByUserId(
-    user_id: int,
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
-):
-    results = await db.userById(user_id)
-    if not results:
-        return JSONResponse({"message": "Not Found!"}, status_code=404)
-    user_info = dict(results[0])
-    user_info["role"] = AppRoles[user_info["role"]]
-    user_info = User.model_validate(user_info)
-    user_info, session_id = await authentication.sessionGet(user_info=user_info)
-    if not user_info:
-        return JSONResponse({"message": "Not Found!"}, status_code=404)
-    user_info = user_info.model_dump()
-    user_info["role"] = AppRoles(user_info["role"]).name
-    user_info["session_id"] = session_id
-    return user_info
-
-@router.get("/sessions/{session_id:str}")
-async def sessionById(
-    session_id: str,
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
-):
-    user_info, session_id = await authentication.sessionGet(session_id=session_id)
-    if not user_info:
-        return JSONResponse({"message": "Not Found!"}, status_code=404)
-    user_info = user_info.model_dump()
-    user_info["role"] = AppRoles(user_info["role"]).name
-    user_info["session_id"] = session_id
-    return user_info

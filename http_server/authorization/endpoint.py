@@ -5,8 +5,14 @@ from .models import User, AppRoles
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 
+class AuthorizationError(Exception):
+    def __init__(self, message=None):
+        if message is None:
+            message = "Unauthorized"
+        super().__init__(message)
+
 class AuthorizeEndpoint:
-    def __init__(self, role: AppRoles, endpoint_authorization: Callable|None=None):
+    def __init__(self, role: AppRoles, endpoint_authorization: Callable | None=None):
         self.role = role
         self.endpoint_authorization = endpoint_authorization
 
@@ -16,9 +22,9 @@ class AuthorizeEndpoint:
     ) -> dict:
         user_info: User = request.state.user_info
         if user_info.role < self.role:
-            raise HTTPException(403, "Unauthorized!")
-        elif user_info.role < max(e.value for e in AppRoles) and self.endpoint_authorization:
-            # NOTE: user does not have max permissions AND
-            #       this endpoint requries further authorization
+            raise AuthorizationError()
+        elif user_info.role < max(e.value for e in AppRoles):
+            if not self.endpoint_authorization:
+                raise Exception("User level permissions must have further authorizations!")
             self.endpoint_authorization(request, user_info)
         return user_info

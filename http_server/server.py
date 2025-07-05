@@ -13,10 +13,10 @@ from fastapi.responses import PlainTextResponse
 from pathlib import Path
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
-from .middlewares import authentication, request_init
-from .routers import bands, users
-from .data import db
 from common import tickets
+from .middlewares import authentication
+from .routers import bands, users, sessions
+from .data import db
 
 LOGGER = logging.getLogger("playlist")
 
@@ -62,10 +62,13 @@ if __name__ == "__main__":
             environment=args.environment
         )
     )
+
+    # NOTE: Middlewares are run in reverse order of how they are added.
     app.add_middleware(authentication.Authenticate)
-    app.add_middleware(request_init.InitMiddleware)
+
     app.add_api_route("/health", health)
     app.include_router(users.router)
+    app.include_router(sessions.router)
     app.include_router(bands.router)
 
     uvicorn.run(app, host=args.host, port=args.port, log_config=LOGGING_CONFIG)
