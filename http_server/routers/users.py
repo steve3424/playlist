@@ -1,6 +1,7 @@
 import logging
 import bcrypt
 import base64
+from sqlite3.dbapi2 import IntegrityError
 from typing import Annotated
 from fastapi import APIRouter, Form, Depends
 from fastapi.responses import JSONResponse
@@ -29,8 +30,6 @@ async def register(
     user_name = user_name.strip()
     if len(user_name) < USERNAME_MIN_LEN or USERNAME_MAX_LEN < len(user_name):
         return JSONResponse({"message": f"Username length must be {USERNAME_MIN_LEN} <= and <= {USERNAME_MAX_LEN}!"}, status_code=422)
-    if await db.userExists(user_name):
-        return JSONResponse({"message": f"Username '{user_name}' already taken!"}, status_code=422)
 
     if not password:
         return JSONResponse({"message": "Password can't be empty!"}, status_code=422)
@@ -39,10 +38,13 @@ async def register(
         return JSONResponse({"message": f"Password length must be {PASSWORD_MIN_LEN} <= and <= {PASSWORD_MAX_LEN}!"}, status_code=422)
     password_enc = base64.b64encode(bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())).decode("utf-8")
 
-    await db.userAdd(user_name, password_enc)
-    # NOTE: We want the exact timestamps from db so we make an extra call here.
-    user = await db.userByName(user_name)
-    return user[0]
+    try:
+        await db.userAdd(user_name, password_enc)
+        # NOTE: We want the exact timestamps from db so we make an extra call here.
+        user = await db.userByName(user_name)
+        return user[0]
+    except IntegrityError as ex:
+        return JSONResponse({"message": f"Username '{user_name}' already taken!"}, status_code=422)
 
 @router.get("")
 async def all(

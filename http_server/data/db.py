@@ -94,9 +94,7 @@ async def userExists(user_name: str) -> bool:
 
 async def userAdd(user_name: str, password: str) -> int:
     global USER_ADD
-    result = await execute(USER_ADD, (user_name, password))
-    if result != 1:
-        raise Exception(f"Error adding user. Rows affected is {result}!")
+    await execute(USER_ADD, (user_name, password))
 
 async def usersAll() -> list:
     global USERS_ALL
