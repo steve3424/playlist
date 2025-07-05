@@ -1,5 +1,3 @@
-- auth refactor
-  - put in middlewares?
 - discuss how song updates will be shared live
     - can full list be shared?
       what if new user joins, shares empty list, and
@@ -7,7 +5,9 @@
     - should we only share updates by default?
     - multiple modes: update/full
     - up next vs add to end of list
-- make client sample actually have playlist
 - handle different message types in ws server
 - finish out db tables
 - integrate w/ google drive for storage
+- remove uvicorn.error to avoid stack traces on custom exceptions
+- auth refactor
+  - put in middlewares?

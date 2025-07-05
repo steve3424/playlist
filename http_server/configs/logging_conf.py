@@ -6,6 +6,7 @@ IP_ADDRESS: ContextVar[str] = ContextVar("ip_address", default="-")
 ENDPOINT: ContextVar[str] = ContextVar("endpoint", default="-")
 USER_NAME: ContextVar[str] = ContextVar("user_name", default="-")
 REQUEST_ID: ContextVar[str] = ContextVar("request_id", default="-")
+STATUS_CODE: ContextVar[str] = ContextVar("status_code", default="-")
 
 LOG_FILE_DIR = os.path.join(os.path.dirname(__file__), os.pardir, "logs")
 LOG_FILE_NAME = os.path.join(LOG_FILE_DIR, "playlist.log")
@@ -19,10 +20,14 @@ class TraceFilter(Filter):
         global IP_ADDRESS
         global ENDPOINT
         global USER_NAME
+        global REQUEST_ID
+        global STATUS_CODE
+
         log_record.ip_address = IP_ADDRESS.get()
         log_record.endpoint = ENDPOINT.get()
         log_record.user_name = USER_NAME.get()
         log_record.request_id = REQUEST_ID.get()
+        log_record.status_code = STATUS_CODE.get()
         return True
 
 LOGGING_CONFIG = { 
@@ -30,7 +35,7 @@ LOGGING_CONFIG = {
     "disable_existing_loggers": True,
     "formatters": { 
         "standard": { 
-            "format": "[%(levelname)s] [%(ip_address)s][%(endpoint)s][%(user_name)s][%(request_id)s] %(asctime)s %(name)s: %(message)s"
+            "format": "[%(levelname)s] [%(request_id)s][%(ip_address)s][%(user_name)s][%(endpoint)s][%(status_code)s] %(asctime)s: %(message)s"
         },
     },
     "filters": {
