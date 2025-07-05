@@ -9,7 +9,7 @@ from .encryption import AESCipher
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 CLIENT: redis.Redis = None
 TICKET_TTL = 10 # seconds
-TICKET_PREFIX = "ticket"
+TICKET_PREFIX = "TICKET"
 CIPHER = None
 
 class TicketError(Exception):
