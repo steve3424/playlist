@@ -72,9 +72,21 @@ DELETE_USER = """
     WHERE name = ?;
 """
 
-def init():
+async def init():
     global DB_NAME
-    DB_NAME = Path(os.path.dirname(__file__), os.pardir, "data", os.environ.get("DB_NAME"))
+    DB_NAME = Path(os.path.dirname(__file__), os.environ.get("DB_NAME"))
+    try:
+        if not os.path.exists(DB_NAME):
+            schema_file = Path(os.path.dirname(__file__), "playlist_schema.sql")
+            with open(schema_file, "r", encoding="utf-8") as f:
+                schema_file = f.read()
+            async with asql.connect(DB_NAME, autocommit=True) as db:
+                await db.executescript(schema_file)
+            LOGGER.info(f"DB created at '{DB_NAME}'!")
+        else:
+            LOGGER.info(f"Using db at '{DB_NAME}'!")
+    except Exception as ex:
+        LOGGER.error(f"Failed to create db file at '{DB_NAME}': {ex}")
 
 async def execute(query: str, data: tuple=None) -> list | int:
     global DB_NAME
