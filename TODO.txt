@@ -1,3 +1,8 @@
+- auth refactor
+  - put in middlewares?
+  - should be just string values instead of int/hierarchy
+  - tests
+  
 - discuss how song updates will be shared live
     - can full list be shared?
       what if new user joins, shares empty list, and
@@ -9,5 +14,3 @@
 - finish out db tables
 - integrate w/ google drive for storage
 - remove uvicorn.error to avoid stack traces on custom exceptions
-- auth refactor
-  - put in middlewares?
