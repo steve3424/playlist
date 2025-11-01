@@ -135,22 +135,22 @@ async def sessionCreate(user_info: User, response: Response) -> None:
     await transaction.expire(user_session_key, SESSION_TTL)
     await transaction.execute()
 
-    response.set_cookie(SESSION_COOKIE_NAME, session_id, secure=True, httponly=True, samesite="strict")
+    response.set_cookie(SESSION_COOKIE_NAME, session_id, secure=True, httponly=True, samesite="strict", max_age=SESSION_TTL)
 
-async def sessionGet(id: str) -> User | None:
+async def sessionGet(session_id_or_name: str) -> User | None:
     global SESSION_CLIENT
     global SESSION_COOKIE_NAME
 
-    user_info = await SESSION_CLIENT.get(f"{SESSION_COOKIE_NAME}:{id}")
+    user_info = await SESSION_CLIENT.get(f"{SESSION_COOKIE_NAME}:{session_id_or_name}")
     if user_info:
         user_info = User.model_validate_json(user_info)
     return user_info
 
-async def sessionDelete(id: str) -> None:
+async def sessionDelete(session_id_or_name: str) -> None:
     global SESSION_CLIENT
     global SESSION_COOKIE_NAME
 
-    user_info = await sessionGet(id)
+    user_info = await sessionGet(session_id_or_name)
     if user_info:
         transaction = SESSION_CLIENT.pipeline(transaction=True)
         await transaction.delete(f"{SESSION_COOKIE_NAME}:{user_info.session_id}")
