@@ -1,5 +1,4 @@
 - auth refactor
-  - put in middlewares?
   - tests
   - duplicate sessions bug
 
