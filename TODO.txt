@@ -1,5 +1,4 @@
-- auth refactor
-  - tests
+- tests
 - separate redis client for different envs
 - finish out db tables
 
