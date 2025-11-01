@@ -6,7 +6,7 @@ import redis.asyncio as redis
 import uuid
 import time
 from typing import Callable, Awaitable
-from fastapi import Request, Response, HTTPException
+from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.concurrency import iterate_in_threadpool

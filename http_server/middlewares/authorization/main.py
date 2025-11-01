@@ -1,6 +1,6 @@
 import logging
 from typing import Callable
-from fastapi import Request, HTTPException
+from fastapi import Request
 from .models import User, AppRoles
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")

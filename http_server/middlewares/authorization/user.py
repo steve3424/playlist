@@ -1,6 +1,6 @@
 from .models import User
 from .main import AuthorizationError
-from fastapi import Request, HTTPException
+from fastapi import Request
 
 def checkUserId(request: Request, user_info: User):
     if user_info.id != int(request.path_params["id"]):
