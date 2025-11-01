@@ -1,6 +1,5 @@
 - auth refactor
   - put in middlewares?
-  - should be just string values instead of int/hierarchy
   - tests
   - duplicate sessions bug
 

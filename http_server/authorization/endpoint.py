@@ -25,6 +25,6 @@ class AuthorizeEndpoint:
         user_info: User = request.state.user_info
         if user_info.role < self.role:
             raise AuthorizationError()
-        elif user_info.role < max(e.value for e in AppRoles):
+        elif user_info.role < AppRoles.admin.value:
             self.endpoint_authorization(request, user_info)
         return user_info
