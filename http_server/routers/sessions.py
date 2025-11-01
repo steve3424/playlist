@@ -30,7 +30,7 @@ async def login(
 
 @router.get("")
 async def all(
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
+    user_info: User=Depends(AuthorizeEndpoint())
 ):
     return await authentication.sessionAll()
 

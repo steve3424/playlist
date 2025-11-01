@@ -48,7 +48,7 @@ async def register(
 
 @router.get("")
 async def all(
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
+    user_info: User=Depends(AuthorizeEndpoint())
 ):
     return await db.usersAll()
 
