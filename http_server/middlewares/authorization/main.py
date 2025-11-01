@@ -11,7 +11,7 @@ class AuthorizationError(Exception):
             message = "Unauthorized"
         super().__init__(message)
 
-class AuthorizeEndpoint:
+class Authorize:
     def __init__(self, role: AppRoles=None, endpoint_authorization: Callable | None=None):
         self.role = role if role is not None else AppRoles.admin
         self.endpoint_authorization = endpoint_authorization

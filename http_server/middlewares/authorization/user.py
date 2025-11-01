@@ -1,5 +1,5 @@
 from .models import User
-from .endpoint import AuthorizationError
+from .main import AuthorizationError
 from fastapi import Request, HTTPException
 
 def checkUserId(request: Request, user_info: User):

@@ -8,7 +8,7 @@ from ..data import db
 from ..middlewares import authentication
 from ..middlewares.authorization import user as user_auth
 from ..middlewares.authorization.models import User, AppRoles
-from ..middlewares.authorization.endpoint import AuthorizeEndpoint
+from ..middlewares.authorization.main import Authorize
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 
@@ -30,14 +30,14 @@ async def login(
 
 @router.get("")
 async def all(
-    user_info: User=Depends(AuthorizeEndpoint())
+    user_info: User=Depends(Authorize())
 ):
     return await authentication.sessionAll()
 
 @router.delete("/{name}")
 async def logout(
     name: str,
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserName))
+    user_info: User=Depends(Authorize(AppRoles.user, user_auth.checkUserName))
 ):
     await authentication.sessionDelete(name)
     return JSONResponse({"message": f"'{name}' logged out!"}, status_code=200)
@@ -46,6 +46,6 @@ async def logout(
 @router.get("/{name}")
 async def userSession(
     name: str,
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserName))
+    user_info: User=Depends(Authorize(AppRoles.user, user_auth.checkUserName))
 ):
     return await authentication.sessionGet(name)
