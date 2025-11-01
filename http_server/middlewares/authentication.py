@@ -76,12 +76,14 @@ class Authenticate(BaseHTTPMiddleware):
                     user_info = await self.userFromResponseBody(response)
                     await sessionDelete(user_info.name)
                     await sessionCreate(user_info, response)
+                    logging_conf.USER_NAME.set(user_info.name)
             elif requested_endpoint == register_endpoint:
                 LOGGER.info("Request...")
                 response = await call_next(request)
                 if response.status_code == 200:
                     user_info = await self.userFromResponseBody(response)
                     await sessionCreate(user_info, response)
+                    logging_conf.USER_NAME.set(user_info.name)
             else:
                 user_info = await sessionValidate(request)
                 logging_conf.USER_NAME.set(user_info.name)
