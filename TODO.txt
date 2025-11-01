@@ -1,6 +1,5 @@
 - auth refactor
   - tests
-  - duplicate sessions bug
 
 - discuss how song updates will be shared live
     - can full list be shared?
