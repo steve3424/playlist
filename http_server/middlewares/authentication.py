@@ -10,8 +10,8 @@ from fastapi import Request, Response, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.concurrency import iterate_in_threadpool
-from ..authorization.models import User
-from ..authorization.endpoint import AuthorizationError
+from .authorization.models import User
+from .authorization.endpoint import AuthorizationError
 from ..configs import logging_conf
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")

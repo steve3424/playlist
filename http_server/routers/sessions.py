@@ -5,10 +5,10 @@ from typing import Annotated
 from fastapi import APIRouter, Form, Depends
 from fastapi.responses import JSONResponse
 from ..data import db
-from ..authorization import user as user_auth
-from ..authorization.models import User, AppRoles
-from ..authorization.endpoint import AuthorizeEndpoint
 from ..middlewares import authentication
+from ..middlewares.authorization import user as user_auth
+from ..middlewares.authorization.models import User, AppRoles
+from ..middlewares.authorization.endpoint import AuthorizeEndpoint
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 
