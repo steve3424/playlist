@@ -86,9 +86,22 @@ async def init() -> bool:
             LOGGER.info(f"DB created at '{DB_NAME}'!")
         else:
             LOGGER.info(f"DB found at '{DB_NAME}'!")
+
+        db_health = await health()
+        if not db_health:
+            return False
         return True
     except Exception as ex:
         LOGGER.error(f"Failed to create db file at '{DB_NAME}': {ex}")
+        return False
+
+async def health():
+    try:
+        async with asql.connect(DB_NAME) as db:
+            await db.execute("SELECT 1")
+        return True
+    except Exception as ex:
+        print(f"DB health check failed: {ex}")
         return False
 
 async def execute(query: str, data: tuple=None) -> list | int:
