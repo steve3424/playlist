@@ -43,6 +43,7 @@ async def appLife(app: fastapi.FastAPI, *args, **kwargs):
     await authentication.shutdown()
 
 def health() -> PlainTextResponse:
+    # TODO: real health check
     return PlainTextResponse("healthy")
     
 if __name__ == "__main__":
