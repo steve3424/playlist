@@ -46,21 +46,13 @@ def health() -> PlainTextResponse:
     # TODO: real health check
     return PlainTextResponse("healthy")
     
-if __name__ == "__main__":
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--host",        type=str, default="0.0.0.0")
-    arg_parser.add_argument("--port",        type=int, default=80)
-    arg_parser.add_argument("--redis-host",  type=str, default="localhost")
-    arg_parser.add_argument("--redis-port",  type=int, default=6379)
-    arg_parser.add_argument("--environment", type=str, default="dev", choices=["dev", "prod"])
-    args = arg_parser.parse_args()
-
+def createApp(redis_host: str, redis_port: int, environment: str) -> fastapi.FastAPI:
     app = fastapi.FastAPI(
         lifespan=lambda app: appLife(
             app,
-            redis_host=args.redis_host,
-            redis_port=args.redis_port,
-            environment=args.environment
+            redis_host=redis_host,
+            redis_port=redis_port,
+            environment=environment
         )
     )
 
@@ -71,5 +63,17 @@ if __name__ == "__main__":
     app.include_router(users.router)
     app.include_router(sessions.router)
     # app.include_router(bands.router)
+    return app
+
+if __name__ == "__main__":
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("--host",        type=str, default="0.0.0.0")
+    arg_parser.add_argument("--port",        type=int, default=80)
+    arg_parser.add_argument("--redis-host",  type=str, default="localhost")
+    arg_parser.add_argument("--redis-port",  type=int, default=6379)
+    arg_parser.add_argument("--environment", type=str, default="dev", choices=["dev", "prod"])
+    args = arg_parser.parse_args()
+
+    app = createApp(args.redis_host, args.redis_port, args.environment)
 
     uvicorn.run(app, host=args.host, port=args.port, log_config=LOGGING_CONFIG)
