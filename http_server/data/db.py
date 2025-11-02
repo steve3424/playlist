@@ -98,6 +98,7 @@ async def health():
     try:
         async with asql.connect(DB_NAME) as db:
             await db.execute("SELECT 1")
+            await db.execute("PRAGMA integrity_check")
         return True
     except Exception as ex:
         print(f"DB health check failed: {ex}")
