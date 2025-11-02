@@ -73,6 +73,7 @@ DELETE_USER = """
 """
 
 async def init():
+    # TODO: add healthcheck here?
     global DB_NAME
     DB_NAME = Path(os.path.dirname(__file__), os.environ.get("DB_NAME"))
     try:

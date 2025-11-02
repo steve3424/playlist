@@ -20,3 +20,15 @@ def test_startup_load_dotenv_fails_still_start(*args):
     with TestClient(createApp("localhost", 6379, "dev")) as c:
         pass
     assert True
+
+def test_startup_ticket_init_fails_still_start(*args):
+    # TODO
+    raise NotImplementedError()
+
+def test_startup_authentication_init_fails_startup_fails(*args):
+    # TODO
+    raise NotImplementedError()
+
+def test_startup_db_init_fails_startup_fails(*args):
+    # TODO
+    raise NotImplementedError()
