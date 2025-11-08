@@ -5,7 +5,7 @@ from http_server.server import createApp
 
 client = TestClient(createApp("localhost", 6379, "dev"))
 
-def test_register_empty_user_name_error():
+def test_register_user_name_empty():
     response = client.post(
         "/users",
         data={
@@ -17,7 +17,7 @@ def test_register_empty_user_name_error():
     assert response.json() == {"message": "Password can't be empty!"}
 
 @pytest.mark.skipif((USERNAME_MIN_LEN - 1) == 0, reason=f"Short username will be empty, covered by other test.")
-def test_register_empty_user_name_too_short():
+def test_register_user_name_too_short():
     user_name = "a" * (USERNAME_MIN_LEN - 1)
     response = client.post(
         "/users",
@@ -29,7 +29,7 @@ def test_register_empty_user_name_too_short():
     assert response.status_code == 422
     assert response.json() == {"message": f"Username must be at least {USERNAME_MIN_LEN} characters, but was {len(user_name)}!"}
 
-def test_register_empty_user_name_too_long():
+def test_register_user_name_too_long():
     user_name = "a" * (USERNAME_MAX_LEN + 1)
     response = client.post(
         "/users",
