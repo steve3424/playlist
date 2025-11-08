@@ -25,19 +25,21 @@ async def register(
     user_name: Annotated[str, Form()],
     password: Annotated[str, Form()],
 ):
-    if not user_name:
-        return JSONResponse({"message": "Password can't be empty!"}, status_code=422)
+    if user_name is None:
+        user_name = ""
     user_name = user_name.strip()
     if len(user_name) < USERNAME_MIN_LEN:
         return JSONResponse({"message": f"Username must be at least {USERNAME_MIN_LEN} characters, but was {len(user_name)}!"}, status_code=422)
     if USERNAME_MAX_LEN < len(user_name):
         return JSONResponse({"message": f"Username can't be longer than {USERNAME_MAX_LEN} characters, but was {len(user_name)}"}, status_code=422)
 
-    if not password:
-        return JSONResponse({"message": "Password can't be empty!"}, status_code=422)
+    if password is None:
+        password = ""
     password = password.strip()
-    if len(password) < PASSWORD_MIN_LEN or PASSWORD_MAX_LEN < len(password):
-        return JSONResponse({"message": f"Password length must be {PASSWORD_MIN_LEN} <= and <= {PASSWORD_MAX_LEN}!"}, status_code=422)
+    if len(password) < PASSWORD_MIN_LEN:
+        return JSONResponse({"message": f"Password must be at least {PASSWORD_MIN_LEN} characters, but was {len(password)}!"}, status_code=422)
+    if PASSWORD_MIN_LEN < len(password):
+        return JSONResponse({"message": f"Password can't be longer than {PASSWORD_MAX_LEN} characters, but was {len(password)}"}, status_code=422)
     password_enc = base64.b64encode(bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())).decode("utf-8")
 
     try:
