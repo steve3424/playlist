@@ -1,1 +1,1 @@
-python -m pytest --capture=no tests/unit/
+python -m pytest --capture=no --cov=http_server --cov-report=term-missing tests/unit/
