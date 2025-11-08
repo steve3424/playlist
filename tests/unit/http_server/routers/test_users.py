@@ -1,6 +1,9 @@
 import logging
+import pytest
 import pytest_asyncio
 import os
+import random
+import string
 from pathlib import Path
 from fastapi.testclient import TestClient
 from http_server.routers.users import USERNAME_MIN_LEN, USERNAME_MAX_LEN, PASSWORD_MIN_LEN, PASSWORD_MAX_LEN
@@ -128,3 +131,20 @@ def test_register_user_name_password_max_len(*args):
 
     assert response.status_code == 200
     assert response.json()["name"] == user_name
+
+@pytest.mark.asyncio
+async def test_register_user_name_already_exists():
+    user_name = "".join(random.choices(string.ascii_letters, k=USERNAME_MAX_LEN))
+    password = "password"
+    await db.userAdd(user_name, password)
+
+    response = CLIENT.post(
+        "/users",
+        data={
+            "user_name": user_name,
+            "password": password
+        }
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {"message": f"Username '{user_name}' already taken!"}
