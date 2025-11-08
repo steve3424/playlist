@@ -28,8 +28,10 @@ async def register(
     if not user_name:
         return JSONResponse({"message": "Password can't be empty!"}, status_code=422)
     user_name = user_name.strip()
-    if len(user_name) < USERNAME_MIN_LEN or USERNAME_MAX_LEN < len(user_name):
-        return JSONResponse({"message": f"Username length must be {USERNAME_MIN_LEN} <= and <= {USERNAME_MAX_LEN}!"}, status_code=422)
+    if len(user_name) < USERNAME_MIN_LEN:
+        return JSONResponse({"message": f"Username must be at least {USERNAME_MIN_LEN} characters, but was {len(user_name)}!"}, status_code=422)
+    if USERNAME_MAX_LEN < len(user_name):
+        return JSONResponse({"message": f"Username can't be longer than {USERNAME_MAX_LEN} characters, but was {len(user_name)}"}, status_code=422)
 
     if not password:
         return JSONResponse({"message": "Password can't be empty!"}, status_code=422)
