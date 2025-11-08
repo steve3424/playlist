@@ -1,1 +1,1 @@
-python -m pytest tests/unit/
+python -m pytest --capture=no tests/unit/
