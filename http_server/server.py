@@ -20,6 +20,9 @@ from .data import db
 
 LOGGER = logging.getLogger("playlist")
 
+class StartupException(Exception):
+    pass
+
 @asynccontextmanager
 async def appLife(app: fastapi.FastAPI, *args, **kwargs):
     LOGGER.info("Starting server...")
@@ -33,10 +36,10 @@ async def appLife(app: fastapi.FastAPI, *args, **kwargs):
     await tickets.init(kwargs["redis_host"], kwargs["redis_port"])
     db_init = await db.init()
     if not db_init:
-        raise Exception("DB failed to initialize!")
+        raise StartupException("DB failed to initialize!")
     auth_init = await authentication.init(kwargs["redis_host"], kwargs["redis_port"])
     if not auth_init:
-        raise Exception("Auth failed to initialize!")
+        raise StartupException("Auth failed to initialize!")
 
     yield
 
