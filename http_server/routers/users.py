@@ -38,7 +38,7 @@ async def register(
     password = password.strip()
     if len(password) < PASSWORD_MIN_LEN:
         return JSONResponse({"message": f"Password must be at least {PASSWORD_MIN_LEN} characters, but was {len(password)}!"}, status_code=422)
-    if PASSWORD_MIN_LEN < len(password):
+    if PASSWORD_MAX_LEN < len(password):
         return JSONResponse({"message": f"Password can't be longer than {PASSWORD_MAX_LEN} characters, but was {len(password)}"}, status_code=422)
     password_enc = base64.b64encode(bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())).decode("utf-8")
 
