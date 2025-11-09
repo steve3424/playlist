@@ -50,7 +50,7 @@ async def appLife(app: fastapi.FastAPI, *args, **kwargs):
 def health() -> PlainTextResponse:
     # TODO: real health check
     return PlainTextResponse("healthy")
-    
+
 def createApp(redis_host: str, redis_port: int, environment: str) -> fastapi.FastAPI:
     app = fastapi.FastAPI(
         lifespan=lambda app: appLife(
