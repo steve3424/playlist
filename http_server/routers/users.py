@@ -44,7 +44,8 @@ async def register(
 
     try:
         await db.userAdd(user_name, password_enc)
-        # NOTE: We want the exact timestamps from db so we make an extra call here.
+        # TODO: We want the exact timestamps from db so we make an extra call here.
+        #       this should be single transaction?
         user = await db.userByName(user_name)
         return user[0]
     except IntegrityError as ex:
