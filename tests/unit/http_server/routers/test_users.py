@@ -168,6 +168,14 @@ def test_register_db_error(db_mock):
     assert response.status_code == 500
     assert response.json() == {"message": "Something went wrong"}
 
+def test_all_no_session_id_error():
+    response = CLIENT.get(
+        "/users"
+    )
+
+    assert response.status_code == 401
+    assert response.json() == {"message": "Session id not found in request!"}
+
 @patch("http_server.middlewares.authentication.sessionValidate", new_callable=AsyncMock)
 def test_all_user_not_allowed(session_mock):
     session_mock.return_value = User.model_validate(
