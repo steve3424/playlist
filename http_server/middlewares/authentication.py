@@ -56,6 +56,7 @@ class Authenticate(BaseHTTPMiddleware):
             logging_conf.IP_ADDRESS.set(request.client.host)
             logging_conf.ENDPOINT.set(f"{request.method}:{request.url.path}")
             logging_conf.REQUEST_ID.set(uuid.uuid4().hex)
+            LOGGER.info("Request...")
 
             open_endpoints = {
                 "GET:/docs",
@@ -67,10 +68,8 @@ class Authenticate(BaseHTTPMiddleware):
 
             requested_endpoint = f"{request.method}:{request.url.path}"
             if requested_endpoint in open_endpoints:
-                LOGGER.info("Request...")
                 response = await call_next(request)
             elif requested_endpoint == login_endpoint:
-                LOGGER.info("Request...")
                 response = await call_next(request)
                 if response.status_code == 200:
                     user_info = await self.userFromResponseBody(response)
@@ -78,7 +77,6 @@ class Authenticate(BaseHTTPMiddleware):
                     await sessionDelete(user_info.name)
                     await sessionCreate(user_info, response)
             elif requested_endpoint == register_endpoint:
-                LOGGER.info("Request...")
                 response = await call_next(request)
                 if response.status_code == 200:
                     user_info = await self.userFromResponseBody(response)
@@ -88,7 +86,6 @@ class Authenticate(BaseHTTPMiddleware):
             else:
                 user_info = await sessionValidate(request)
                 logging_conf.USER_NAME.set(user_info.name)
-                LOGGER.info("Request...")
                 request.state.user_info = user_info
                 response = await call_next(request)
         except AuthenticationError as ex:
