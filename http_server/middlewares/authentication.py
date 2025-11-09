@@ -172,9 +172,9 @@ async def sessionAll() -> list[User]:
 async def sessionValidate(request: Request) -> User:
     global SESSION_COOKIE_NAME
 
-    session_id = request.headers.get("Authorization", None)
+    session_id = request.cookies.get(SESSION_COOKIE_NAME, None)
     if not session_id:
-        session_id = request.cookies.get(SESSION_COOKIE_NAME, None)
+        session_id = request.headers.get("Authorization", None)
     if not session_id:
         raise AuthenticationError("Session id not found in request!")
 
