@@ -88,6 +88,7 @@ class Authenticate(BaseHTTPMiddleware):
                 logging_conf.USER_NAME.set(user_info.name)
                 request.state.user_info = user_info
                 response = await call_next(request)
+            logging_conf.STATUS_CODE.set(response.status_code)
         except AuthenticationError as ex:
             response = JSONResponse({"message": str(ex)}, status_code=401)
             logging_conf.STATUS_CODE.set(response.status_code)
@@ -102,7 +103,6 @@ class Authenticate(BaseHTTPMiddleware):
             logging_conf.STATUS_CODE.set(response.status_code)
             LOGGER.exception(ex)
         finally:
-            logging_conf.STATUS_CODE.set(response.status_code)
             self.addSecurityHeaders(response)
             LOGGER.info(f"{(time.perf_counter() - time_start_request):.6f}s")
             return response
