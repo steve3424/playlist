@@ -72,7 +72,7 @@ DELETE_USER = """
     WHERE name = ?;
 """
 
-async def init():
+async def init() -> bool:
     global DB_NAME
     DB_NAME = Path(os.path.dirname(__file__), os.environ.get("DB_NAME"))
     try:
@@ -85,8 +85,24 @@ async def init():
             LOGGER.info(f"DB created at '{DB_NAME}'!")
         else:
             LOGGER.info(f"DB found at '{DB_NAME}'!")
+
+        db_health = await health()
+        if not db_health:
+            return False
+        return True
     except Exception as ex:
         LOGGER.error(f"Failed to create db file at '{DB_NAME}': {ex}")
+        return False
+
+async def health():
+    try:
+        async with asql.connect(DB_NAME) as db:
+            await db.execute("SELECT 1")
+            await db.execute("PRAGMA integrity_check")
+        return True
+    except Exception as ex:
+        print(f"DB health check failed: {ex}")
+        return False
 
 async def execute(query: str, data: tuple=None) -> list | int:
     global DB_NAME
