@@ -6,12 +6,12 @@ import redis.asyncio as redis
 import uuid
 import time
 from typing import Callable, Awaitable
-from fastapi import Request, Response, HTTPException
+from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.concurrency import iterate_in_threadpool
-from ..authorization.models import User
-from ..authorization.endpoint import AuthorizationError
+from .authorization.models import User
+from .authorization.main import AuthorizationError
 from ..configs import logging_conf
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
@@ -74,6 +74,7 @@ class Authenticate(BaseHTTPMiddleware):
                 response = await call_next(request)
                 if response.status_code == 200:
                     user_info = await self.userFromResponseBody(response)
+                    logging_conf.USER_NAME.set(user_info.name)
                     await sessionDelete(user_info.name)
                     await sessionCreate(user_info, response)
             elif requested_endpoint == register_endpoint:
@@ -81,6 +82,8 @@ class Authenticate(BaseHTTPMiddleware):
                 response = await call_next(request)
                 if response.status_code == 200:
                     user_info = await self.userFromResponseBody(response)
+                    logging_conf.USER_NAME.set(user_info.name)
+                    await sessionDelete(user_info.name)
                     await sessionCreate(user_info, response)
             else:
                 user_info = await sessionValidate(request)
@@ -135,22 +138,22 @@ async def sessionCreate(user_info: User, response: Response) -> None:
     await transaction.expire(user_session_key, SESSION_TTL)
     await transaction.execute()
 
-    response.set_cookie(SESSION_COOKIE_NAME, session_id, secure=True, httponly=True, samesite="strict")
+    response.set_cookie(SESSION_COOKIE_NAME, session_id, secure=True, httponly=True, samesite="strict", max_age=SESSION_TTL)
 
-async def sessionGet(id: str) -> User | None:
+async def sessionGet(session_id_or_name: str) -> User | None:
     global SESSION_CLIENT
     global SESSION_COOKIE_NAME
 
-    user_info = await SESSION_CLIENT.get(f"{SESSION_COOKIE_NAME}:{id}")
+    user_info = await SESSION_CLIENT.get(f"{SESSION_COOKIE_NAME}:{session_id_or_name}")
     if user_info:
         user_info = User.model_validate_json(user_info)
     return user_info
 
-async def sessionDelete(id: str) -> None:
+async def sessionDelete(session_id_or_name: str) -> None:
     global SESSION_CLIENT
     global SESSION_COOKIE_NAME
 
-    user_info = await sessionGet(id)
+    user_info = await sessionGet(session_id_or_name)
     if user_info:
         transaction = SESSION_CLIENT.pipeline(transaction=True)
         await transaction.delete(f"{SESSION_COOKIE_NAME}:{user_info.session_id}")

@@ -1,8 +1,7 @@
-- auth refactor
-  - put in middlewares?
-  - should be just string values instead of int/hierarchy
-  - tests
-  
+- tests
+- separate redis client for different envs
+- finish out db tables
+
 - discuss how song updates will be shared live
     - can full list be shared?
       what if new user joins, shares empty list, and
@@ -11,6 +10,5 @@
     - multiple modes: update/full
     - up next vs add to end of list
 - handle different message types in ws server
-- finish out db tables
 - integrate w/ google drive for storage
 - remove uvicorn.error to avoid stack traces on custom exceptions

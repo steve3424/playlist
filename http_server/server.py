@@ -69,6 +69,6 @@ if __name__ == "__main__":
     app.add_api_route("/health", health)
     app.include_router(users.router)
     app.include_router(sessions.router)
-    app.include_router(bands.router)
+    # app.include_router(bands.router)
 
     uvicorn.run(app, host=args.host, port=args.port, log_config=LOGGING_CONFIG)

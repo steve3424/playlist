@@ -6,10 +6,10 @@ from typing import Annotated
 from fastapi import APIRouter, Form, Depends
 from fastapi.responses import JSONResponse
 from ..data import db
-from ..authorization import user as user_auth
-from ..authorization.models import User, AppRoles
-from ..authorization.endpoint import AuthorizeEndpoint
 from ..middlewares import authentication
+from ..middlewares.authorization import user as user_auth
+from ..middlewares.authorization.models import User, AppRoles
+from ..middlewares.authorization.main import Authorize
 
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
@@ -48,14 +48,14 @@ async def register(
 
 @router.get("")
 async def all(
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.admin))
+    user_info: User=Depends(Authorize())
 ):
     return await db.usersAll()
 
 @router.delete("/{name}")
 async def deleteAccount(
     name: str,
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserName))
+    user_info: User=Depends(Authorize(AppRoles.user, user_auth.checkUserName))
 ):
     # TODO: do we delete all resources associated w/ this account?
     await authentication.sessionDelete(name)
@@ -67,7 +67,7 @@ async def deleteAccount(
 @router.get("/{name}")
 async def getUser(
     name: str,
-    user_info: User=Depends(AuthorizeEndpoint(AppRoles.user, user_auth.checkUserName))
+    user_info: User=Depends(Authorize(AppRoles.user, user_auth.checkUserName))
 ):
     results = await db.userByName(name)
     if not results:
