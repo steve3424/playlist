@@ -12,7 +12,7 @@ from http_server.data import db
 from unittest.mock import patch, AsyncMock
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
-CLIENT = TestClient(createApp("localhost", 6379, "dev"))
+CLIENT = TestClient(createApp("localhost", 6379, "dev"), raise_server_exceptions=False)
 
 @pytest_asyncio.fixture(scope="module", autouse=True)
 async def setup():
@@ -148,3 +148,21 @@ async def test_register_user_name_already_exists():
 
     assert response.status_code == 422
     assert response.json() == {"message": f"Username '{user_name}' already taken!"}
+
+@patch("http_server.routers.users.db.userAdd", new_callable=AsyncMock)
+def test_register_db_error(db_mock):
+    db_mock.side_effect = Exception()
+
+    user_name = "a" * USERNAME_MIN_LEN
+    password = "a" * PASSWORD_MIN_LEN
+
+    response = CLIENT.post(
+        "/users",
+        data={
+            "user_name": user_name,
+            "password": password
+        }
+    )
+
+    assert response.status_code == 500
+    assert response.json() == {"message": "Something went wrong"}
