@@ -28,6 +28,12 @@ async def setup():
     LOGGER.info("Tearing down...")
     os.remove(test_db_path)
 
+def test_username_and_password_constraints():
+    assert 0 < USERNAME_MIN_LEN
+    assert USERNAME_MIN_LEN < USERNAME_MAX_LEN
+    assert 0 < PASSWORD_MIN_LEN
+    assert PASSWORD_MIN_LEN < PASSWORD_MAX_LEN
+
 def test_register_user_name_too_short():
     user_name = "a" * (USERNAME_MIN_LEN - 1)
     response = CLIENT.post(
@@ -77,12 +83,6 @@ def test_register_password_too_long():
     )
     assert response.status_code == 422
     assert response.json() == {"message": f"Password can't be longer than {PASSWORD_MAX_LEN} characters, but was {len(password)}"}
-
-def test_username_and_password_constraints():
-    assert 0 < USERNAME_MIN_LEN
-    assert USERNAME_MIN_LEN < USERNAME_MAX_LEN
-    assert 0 < PASSWORD_MIN_LEN
-    assert PASSWORD_MIN_LEN < PASSWORD_MAX_LEN
 
 @patch("http_server.middlewares.authentication.sessionCreate", new_callable=AsyncMock)
 @patch("http_server.middlewares.authentication.sessionDelete", new_callable=AsyncMock)
