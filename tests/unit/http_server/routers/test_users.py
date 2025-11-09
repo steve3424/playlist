@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from http_server.routers.users import USERNAME_MIN_LEN, USERNAME_MAX_LEN, PASSWORD_MIN_LEN, PASSWORD_MAX_LEN
 from http_server.server import createApp
 from http_server.data import db
+from http_server.middlewares.authorization.models import User
 from unittest.mock import patch, AsyncMock
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
@@ -166,3 +167,37 @@ def test_register_db_error(db_mock):
 
     assert response.status_code == 500
     assert response.json() == {"message": "Something went wrong"}
+
+@patch("http_server.middlewares.authentication.sessionValidate", new_callable=AsyncMock)
+def test_all_user_not_allowed(session_mock):
+    session_mock.return_value = User.model_validate(
+        {
+            "id": 1,
+            "name": "user_name",
+            "role": "user",
+        }
+    )
+    response = CLIENT.get(
+        "/users"
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"message": "Unauthorized"}
+
+@patch("http_server.routers.users.db.usersAll", new_callable=AsyncMock)
+@patch("http_server.middlewares.authentication.sessionValidate", new_callable=AsyncMock)
+def test_all_admin_allowed(session_mock: AsyncMock, db_mock: AsyncMock):
+    session_mock.return_value = User.model_validate(
+        {
+            "id": 1,
+            "name": "user_name",
+            "role": "admin",
+        }
+    )
+    db_mock.return_value = []
+    response = CLIENT.get(
+        "/users"
+    )
+
+    assert response.status_code == 200
+    db_mock.assert_awaited_once()
