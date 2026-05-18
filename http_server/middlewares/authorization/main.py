@@ -32,3 +32,6 @@ class Authorize:
             else:
                 self.endpoint_authorization(request, user_info)
         return user_info
+
+def noop(request: Request, user_info: User):
+    pass
