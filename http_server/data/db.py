@@ -100,6 +100,20 @@ BAND_COUNT_CREATED = """
     WHERE created_by = ?;
 """
 
+BANDS_ALL = """
+    SELECT bands.id AS id,
+           bands.name AS name,
+           u2.name AS leader,
+           u1.name AS created_by,
+           datetime(bands.created_ts, 'unixepoch', 'localtime') AS created_ts,
+           datetime(bands.updated_ts, 'unixepoch', 'localtime') AS updated_ts
+    FROM bands
+    JOIN users u1
+      ON u1.id = bands.created_by
+    JOIN users u2
+      ON u2.id = bands.leader;
+"""
+
 async def init() -> bool:
     global DB_NAME
     DB_NAME = Path(os.path.dirname(__file__), os.environ.get("DB_NAME"))
@@ -183,3 +197,7 @@ async def bandByName(band_name: str) -> list:
 async def bandCountCreated(user_id: int) -> list:
     global BAND_COUNT_CREATED
     return await execute(BAND_COUNT_CREATED, (user_id,))
+
+async def bandsAll() -> list:
+    global BANDS_ALL
+    return await execute(BANDS_ALL)

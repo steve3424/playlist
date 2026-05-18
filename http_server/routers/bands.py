@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from sqlite3.dbapi2 import IntegrityError
 from ..data import db
 from ..middlewares.authorization import band as band_auth
+from ..middlewares.authorization import main as main_auth
 from ..middlewares.authorization.main import Authorize
 from ..middlewares.authorization.models import User, AppRoles
 
@@ -35,11 +36,13 @@ async def createBand(
         return JSONResponse({"message": f"Band name '{band_name}' already taken!"}, status_code=422)
 
 @router.get("")
-async def all() -> list[str]:
-    # if admin:
-    #     get all bands
-    # elif user:
-    #     get all bands of which I am a member
+async def all(
+    user_info: User=Depends(Authorize(AppRoles.user, main_auth.noop))
+):
+    if user_info.role == AppRoles.admin:
+        return await db.bandsAll()
+    elif user_info.role == AppRoles.user:
+        raise NotImplementedError()
     raise NotImplementedError()
 
 @router.get("/{name}")
