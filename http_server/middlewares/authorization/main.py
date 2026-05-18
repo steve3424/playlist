@@ -1,5 +1,6 @@
 import logging
-from typing import Callable
+import inspect
+from typing import Callable, Awaitable
 from fastapi import Request
 from .models import User, AppRoles
 
@@ -12,13 +13,13 @@ class AuthorizationError(Exception):
         super().__init__(message)
 
 class Authorize:
-    def __init__(self, role: AppRoles=None, endpoint_authorization: Callable | None=None):
+    def __init__(self, role: AppRoles=None, endpoint_authorization: Awaitable | Callable | None=None):
         self.role = role if role is not None else AppRoles.admin
         self.endpoint_authorization = endpoint_authorization
         if self.role.value < AppRoles.admin.value and self.endpoint_authorization == None:
             raise Exception(f"Endpoint allows role '{self.role.name}', but has no further authorizations!")
 
-    def __call__(
+    async def __call__(
         self,
         request: Request
     ) -> dict:
@@ -26,5 +27,8 @@ class Authorize:
         if user_info.role < self.role:
             raise AuthorizationError()
         elif user_info.role < AppRoles.admin.value:
-            self.endpoint_authorization(request, user_info)
+            if inspect.iscoroutinefunction(self.endpoint_authorization):
+                await self.endpoint_authorization(request, user_info)
+            else:
+                self.endpoint_authorization(request, user_info)
         return user_info
