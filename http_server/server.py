@@ -67,7 +67,7 @@ def createApp(redis_host: str, redis_port: int, environment: str) -> fastapi.Fas
     app.add_api_route("/health", health)
     app.include_router(users.router)
     app.include_router(sessions.router)
-    # app.include_router(bands.router)
+    app.include_router(bands.router)
     return app
 
 if __name__ == "__main__":

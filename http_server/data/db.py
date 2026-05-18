@@ -72,6 +72,34 @@ DELETE_USER = """
     WHERE name = ?;
 """
 
+BAND_ADD = """
+    INSERT INTO bands
+        (name, leader, created_by)
+    VALUES
+        (?, ?, ?);
+"""
+
+BAND_BY_NAME = """
+    SELECT bands.id AS id,
+           bands.name AS name,
+           u2.name AS leader,
+           u1.name AS created_by,
+           datetime(bands.created_ts, 'unixepoch', 'localtime') AS created_ts,
+           datetime(bands.updated_ts, 'unixepoch', 'localtime') AS updated_ts
+    FROM bands
+    JOIN users u1
+      ON u1.id = bands.created_by
+    JOIN users u2
+      ON u2.id = bands.leader
+    WHERE bands.name = ?;
+"""
+
+BAND_COUNT_CREATED = """
+    SELECT COUNT(*) as count
+    FROM bands
+    WHERE created_by = ?;
+"""
+
 async def init() -> bool:
     global DB_NAME
     DB_NAME = Path(os.path.dirname(__file__), os.environ.get("DB_NAME"))
@@ -143,3 +171,15 @@ async def userAndPasswordByName(name: str) -> list:
 async def deleteUser(name: str) -> int:
     global DELETE_USER
     return await execute(DELETE_USER, (name,))
+
+async def bandAdd(band_name: str, user_id: int) -> int:
+    global BAND_ADD
+    await execute(BAND_ADD, (band_name, user_id, user_id))
+
+async def bandByName(band_name: str) -> list:
+    global BAND_BY_NAME
+    return await execute(BAND_BY_NAME, (band_name,))
+
+async def bandCountCreated(user_id: int) -> list:
+    global BAND_COUNT_CREATED
+    return await execute(BAND_COUNT_CREATED, (user_id,))

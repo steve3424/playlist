@@ -1,20 +1,65 @@
-# import logging
-# from fastapi import APIRouter, Depends, Request
-# from fastapi.responses import PlainTextResponse
-# from common import tickets
-# from ..authorization.models import AppRoles, User
-# from ..authorization.endpoint import AuthorizeEndpoint
+import logging
+from typing import Annotated
+from fastapi import APIRouter, Form, Depends
+from fastapi.responses import JSONResponse
+from sqlite3.dbapi2 import IntegrityError
+from ..data import db
+from ..middlewares.authorization import band as band_auth
+from ..middlewares.authorization.main import Authorize
+from ..middlewares.authorization.models import User, AppRoles
 
-# LOGGER = logging.getLogger(f"playlist.{__name__}")
+LOGGER = logging.getLogger(f"playlist.{__name__}")
+BAND_NAME_MIN_LEN = 1
+BAND_NAME_MAX_LEN = 64
 
-# router = APIRouter(prefix="/bands", tags=["bands"])
+router = APIRouter(prefix="/bands", tags=["bands"])
 
-# @router.get("/ticket")
-# async def ticket(
-#     request: Request,
-#     band: str,
-#     user_info: User=Depends(AuthorizeEndpoint(AppRoles.user))
-# ) -> PlainTextResponse:
-#     # TODO: determine if user is allowed to have ticket for requested band.
-#     ticket = await tickets.create(user_info.name, band)
-#     return PlainTextResponse(ticket)
+@router.post("")
+async def createBand(
+    band_name: Annotated[str, Form()],
+    user_info: User=Depends(Authorize(AppRoles.user, band_auth.createLimitReached))
+) -> JSONResponse:
+    if band_name is None:
+        band_name = ""
+    band_name = band_name.strip()
+    if len(band_name) < BAND_NAME_MIN_LEN:
+        return JSONResponse({"message": f"Username must be at least {BAND_NAME_MIN_LEN} characters, but was {len(band_name)}!"}, status_code=422)
+    if BAND_NAME_MAX_LEN < len(band_name):
+        return JSONResponse({"message": f"Username can't be longer than {BAND_NAME_MAX_LEN} characters, but was {len(band_name)}"}, status_code=422)
+
+    try:
+        await db.bandAdd(band_name, user_info.id)
+        band = await db.bandByName(band_name)
+        return band[0]
+    except IntegrityError as ex:
+        return JSONResponse({"message": f"Band name '{band_name}' already taken!"}, status_code=422)
+
+@router.get("")
+async def all() -> list[str]:
+    # if admin:
+    #     get all bands
+    # elif user:
+    #     get all bands of which I am a member
+    raise NotImplementedError()
+
+@router.get("/{name}")
+async def getBandInfo() -> dict:
+    raise NotImplementedError()
+
+@router.delete("/{name}")
+async def delete(
+    user_info: User=Depends(Authorize())
+) -> dict:
+    raise NotImplementedError()
+
+@router.get("/{name}/members")
+async def getBandMembers() -> list[str]:
+    raise NotImplementedError()
+
+@router.post("/{name}/members")
+async def addBandMember() -> list[str]:
+    raise NotImplementedError()
+
+@router.delete("/{name}/members")
+async def removeBandMember() -> list[str]:
+    raise NotImplementedError()
