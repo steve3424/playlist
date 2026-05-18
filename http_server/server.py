@@ -28,8 +28,8 @@ async def appLife(app: fastapi.FastAPI, *args, **kwargs):
     LOGGER.info("Starting server...")
 
     env_file_name = f"{kwargs["environment"]}.env"
-    env_file_path = Path(os.path.dirname(__file__), "configs", env_file_name)
-    LOGGER.info(f"Loading configs from '{env_file_name}'...")
+    env_file_path = Path(os.path.dirname(__file__), os.pardir, "common", env_file_name)
+    LOGGER.info(f"Loading configs from '{env_file_path}'...")
     env_loaded = load_dotenv(dotenv_path=env_file_path)
     if not env_loaded:
         LOGGER.warning("Failed to load environment file!")
