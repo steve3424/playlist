@@ -45,3 +45,26 @@ INSERT OR IGNORE INTO app_roles
 VALUES
     (0, 'user'),
     (1, 'admin');
+
+----------------------------------------------------------------
+-- BANDS -------------------------------------------------------
+----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS bands (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(64) UNIQUE NOT NULL,
+    leader     INTEGER NOT NULL,
+    created_by INTEGER NOT NULL,
+    created_ts INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    updated_ts INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    FOREIGN KEY (leader) REFERENCES users(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+CREATE TRIGGER IF NOT EXISTS updated_ts_bands
+AFTER UPDATE ON bands
+FOR EACH ROW
+BEGIN
+    UPDATE bands
+    SET updated_ts = (strftime('%s', 'now'))
+    WHERE id = OLD.id;
+END;
