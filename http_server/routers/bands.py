@@ -36,39 +36,55 @@ async def createBand(
         return JSONResponse({"message": f"Band name '{band_name}' already taken!"}, status_code=422)
 
 @router.get("")
-async def all(user_info: User=Depends(Authorize(AppRoles.user, main_auth.noop))):
+async def all(
+    user_info: User=Depends(Authorize(AppRoles.user, main_auth.noop))
+):
+    # TODO: include_members param
     if user_info.role == AppRoles.admin:
         return await db.bandsAll()
     elif user_info.role == AppRoles.user:
         return await db.bandByMember(user_info.id)
-    raise NotImplementedError()
 
 @router.get("/{name}")
 async def getBand(
     name: str,
     user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandMember))
 ):
+    # TODO: include_members param
     return await db.bandByName(name)
 
 @router.delete("/{name}")
-async def delete(user_info: User=Depends(Authorize())):
-    raise NotImplementedError()
-
-@router.get("/{name}/members")
-async def getBandMembers():
-    raise NotImplementedError()
-
-@router.post("/{name}/members")
-async def addBandMember(
+async def deleteBand(
     name: str,
-    user_name: Annotated[str, Form()],
-    user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandLeaderAndMaxMembersEnforce))
+    user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandLeader))
 ):
-    member_inserted = await db.bandAddMember(name, user_name)
-    if not member_inserted:
-        raise Exception(f"Member {user_name} not inserted into {name} :(")
-    return f"{user_name} added to {name}!"
+    # NOTE: test cases
+    # 1. admin can delete band with only owner member
+    # 2. admin cannot delete band with multiple members
+    # 3. admin can delete own band with only owner member
+    # 4. admin cannot delete own band with only owner member
+    # 5. user cannot delete band with only owner member
+    # 6. user cannot delete band with multiple members
+    # 7. user can delete own band with only owner member
+    # 8. user cannot delete own band with multiple members
+    members = await db.bandMembers(name)
+    leader = await db.bandLeader(name)
+    if 1 < len(members) or members[0]["id"] != leader[0]["leader"]:
+        return JSONResponse({"message": "Band leader must remove all other members in order to delete band!"}, status_code=422)
+    await db.bandDelete(name, leader[0]["leader"])
+    return f"'{name}' deleted!"
 
-@router.delete("/{name}/members")
-async def removeBandMember():
-    raise NotImplementedError()
+# @router.post("/{name}/members/{user_name}")
+# async def addBandMember(
+#     name: str,
+#     user_name: str,
+#     user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandLeaderAndMaxMembersEnforce))
+# ):
+#     member_inserted = await db.bandAddMember(name, user_name)
+#     if not member_inserted:
+#         raise Exception(f"Member {user_name} not inserted into {name} :(")
+#     return f"{user_name} added to {name}!"
+
+# @router.delete("/{name}/members/{user_name}")
+# async def removeBandMember():
+#     raise NotImplementedError()

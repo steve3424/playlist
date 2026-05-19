@@ -72,11 +72,24 @@ DELETE_USER = """
     WHERE name = ?;
 """
 
+BAND_COUNT_CREATED = """
+    SELECT COUNT(*) as count
+    FROM bands
+    WHERE created_by = ?;
+"""
+
 BAND_ADD = """
     INSERT INTO bands
         (name, leader, created_by)
     VALUES
         (?, ?, ?);
+"""
+
+MEMBER_ADD = """
+    INSERT INTO band_members
+        (band_id, user_id)
+    VALUES
+        ((SELECT id FROM bands WHERE name = ?), ?);
 """
 
 BAND_BY_NAME = """
@@ -94,12 +107,6 @@ BAND_BY_NAME = """
     WHERE bands.name = ?;
 """
 
-BAND_COUNT_CREATED = """
-    SELECT COUNT(*) as count
-    FROM bands
-    WHERE created_by = ?;
-"""
-
 BANDS_ALL = """
     SELECT bands.id AS id,
            bands.name AS name,
@@ -112,13 +119,6 @@ BANDS_ALL = """
       ON u1.id = bands.created_by
     JOIN users u2
       ON u2.id = bands.leader;
-"""
-
-MEMBER_ADD = """
-    INSERT INTO band_members
-        (band_id, user_id)
-    VALUES
-        ((SELECT id FROM bands WHERE name = ?), ?);
 """
 
 BAND_BY_MEMBER = """
@@ -138,36 +138,52 @@ BAND_BY_MEMBER = """
     WHERE bm.user_id = ?;
 """
 
-BAND_OWNER = """
+BAND_LEADER = """
     SELECT leader
     FROM bands
     WHERE name = ?;
 """
 
-BAND_ADD_MEMBER = """
-    INSERT INTO band_members
-        (band_id, user_id)
-    VALUES
-        ((SELECT id FROM bands WHERE name = ?), (SELECT id FROM users WHERE name = ?));
-"""
-
 BAND_MEMBERS = """
     SELECT users.id AS id,
-           users.name AS name
+           users.name AS name,
+           app_roles.name AS role,
+           datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
+           datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
     FROM band_members
     JOIN users
       ON users.id = band_members.user_id
     JOIN bands
       ON bands.id = band_members.band_id
+    JOIN app_roles
+      ON users.role_id = app_roles.id
     WHERE bands.name = ?;
 """
 
-BAND_BY_MEMBER_AND_NAME = """
-    SELECT band_id
-    FROM band_members
+BAND_DELETE = """
+    DELETE FROM bands
+    WHERE name = ?;
+"""
+
+BAND_MEMBER_DELETE = """
+    DELETE FROM band_members
     WHERE band_id = (SELECT id FROM bands WHERE name = ?)
       AND user_id = ?;
 """
+
+# BAND_ADD_MEMBER = """
+#     INSERT INTO band_members
+#         (band_id, user_id)
+#     VALUES
+#         ((SELECT id FROM bands WHERE name = ?), (SELECT id FROM users WHERE name = ?));
+# """
+
+# BAND_BY_MEMBER_AND_NAME = """
+#     SELECT band_id
+#     FROM band_members
+#     WHERE band_id = (SELECT id FROM bands WHERE name = ?)
+#       AND user_id = ?;
+# """
 
 async def init() -> bool:
     global DB_NAME
@@ -202,6 +218,7 @@ async def health():
         return False
 
 async def execute(query: str, data: tuple=None) -> list | int:
+    # TODO: I hate this function.
     global DB_NAME
     async with asql.connect(DB_NAME, autocommit=True) as db:
         await db.execute("PRAGMA foreign_keys = ON;")
@@ -213,9 +230,10 @@ async def execute(query: str, data: tuple=None) -> list | int:
                 return cursor.rowcount
 
 async def executetransaction(query: list[str], data: list[tuple]=None) -> list | int:
+    # TODO: I hate this function more.
     global DB_NAME
     results = None
-    async with asql.connect(DB_NAME, autocommit=True) as db:
+    async with asql.connect(DB_NAME) as db:
         await db.execute("PRAGMA foreign_keys = ON;")
         db.row_factory = asql.Row
         for q,d in zip(query, data):
@@ -224,6 +242,7 @@ async def executetransaction(query: list[str], data: list[tuple]=None) -> list |
                     results = await cursor.fetchall()
                 else:
                     results = cursor.rowcount
+        await db.commit()
     return results
 
 async def userExists(user_name: str) -> bool:
@@ -255,37 +274,33 @@ async def deleteUser(name: str) -> int:
     global DELETE_USER
     return await execute(DELETE_USER, (name,))
 
-async def bandAdd(band_name: str, user_id: int) -> int:
-    global BAND_ADD, MEMBER_ADD
-    await executetransaction([BAND_ADD, MEMBER_ADD], [(band_name, user_id, user_id), (band_name, user_id)])
-
-async def bandByName(band_name: str) -> list:
-    global BAND_BY_NAME
-    return await execute(BAND_BY_NAME, (band_name,))
-
 async def bandCountCreated(user_id: int) -> list:
-    global BAND_COUNT_CREATED
     return await execute(BAND_COUNT_CREATED, (user_id,))
 
+async def bandAdd(band_name: str, user_id: int):
+    await executetransaction([BAND_ADD, MEMBER_ADD], [(band_name, user_id, user_id), (band_name, user_id)])
+
+async def bandByName(band_name: str):
+    return await execute(BAND_BY_NAME, (band_name,))
+
 async def bandsAll() -> list:
-    global BANDS_ALL
     return await execute(BANDS_ALL)
 
 async def bandByMember(user_id: int) -> bool:
-    global BAND_BY_MEMBER
     return await execute(BAND_BY_MEMBER, (user_id,))
 
 async def bandLeader(band_name: str) -> list:
-    global BAND_OWNER
-    return await execute(BAND_OWNER, (band_name,))
-
-async def bandAddMember(band_name: str, user_name: str) -> int:
-    global BAND_ADD_MEMBER
-    return await execute(BAND_ADD_MEMBER, (band_name, user_name))
+    return await execute(BAND_LEADER, (band_name,))
 
 async def bandMembers(band_name: str) -> list:
-    global BAND_MEMBERS
     return await execute(BAND_MEMBERS, (band_name,))
 
-async def bandByMemberAndName(band_name: str, user_id: int) -> list:
-    return await execute(BAND_BY_MEMBER_AND_NAME, (band_name, user_id))
+async def bandDelete(band_name: str, member_id: int):
+    return await executetransaction([BAND_MEMBER_DELETE, BAND_DELETE], [(band_name, member_id), (band_name,)])
+
+# async def bandAddMember(band_name: str, user_name: str) -> int:
+#     global BAND_ADD_MEMBER
+#     return await execute(BAND_ADD_MEMBER, (band_name, user_name))
+
+# async def bandByMemberAndName(band_name: str, user_id: int) -> list:
+#     return await execute(BAND_BY_MEMBER_AND_NAME, (band_name, user_id))
