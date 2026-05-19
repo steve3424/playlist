@@ -13,6 +13,12 @@ async def createLimitReached(request: Request, user_info: User):
     if BAND_CREATE_LIMIT <= created_count[0]["count"]:
         raise AuthorizationError(f"Cannot create more than {BAND_CREATE_LIMIT} bands!")
 
+async def isBandMember(request: Request, user_info: User):
+    band_name = request.path_params['name']
+    band_id = await db.bandByMemberAndName(band_name, user_info.id)
+    if len(band_id) < 1:
+        raise AuthorizationError(f"Not a member of '{band_name}'!")
+
 async def isBandLeaderAndMaxMembersEnforce(request: Request, user_info: User):
     band_name = request.path_params['name']
     band_owner = await db.bandLeader(band_name)

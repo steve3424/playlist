@@ -44,8 +44,11 @@ async def all(user_info: User=Depends(Authorize(AppRoles.user, main_auth.noop)))
     raise NotImplementedError()
 
 @router.get("/{name}")
-async def getBandInfo():
-    raise NotImplementedError()
+async def getBand(
+    name: str,
+    user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandMember))
+):
+    return await db.bandByName(name)
 
 @router.delete("/{name}")
 async def delete(user_info: User=Depends(Authorize())):

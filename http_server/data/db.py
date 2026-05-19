@@ -162,6 +162,13 @@ BAND_MEMBERS = """
     WHERE bands.name = ?;
 """
 
+BAND_BY_MEMBER_AND_NAME = """
+    SELECT band_id
+    FROM band_members
+    WHERE band_id = (SELECT id FROM bands WHERE name = ?)
+      AND user_id = ?;
+"""
+
 async def init() -> bool:
     global DB_NAME
     DB_NAME = Path(os.path.dirname(__file__), os.environ.get("DB_NAME"))
@@ -279,3 +286,6 @@ async def bandAddMember(band_name: str, user_name: str) -> int:
 async def bandMembers(band_name: str) -> list:
     global BAND_MEMBERS
     return await execute(BAND_MEMBERS, (band_name,))
+
+async def bandByMemberAndName(band_name: str, user_id: int) -> list:
+    return await execute(BAND_BY_MEMBER_AND_NAME, (band_name, user_id))
