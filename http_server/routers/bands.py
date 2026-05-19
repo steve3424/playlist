@@ -36,9 +36,7 @@ async def createBand(
         return JSONResponse({"message": f"Band name '{band_name}' already taken!"}, status_code=422)
 
 @router.get("")
-async def all(
-    user_info: User=Depends(Authorize(AppRoles.user, main_auth.noop))
-):
+async def all(user_info: User=Depends(Authorize(AppRoles.user, main_auth.noop))):
     if user_info.role == AppRoles.admin:
         return await db.bandsAll()
     elif user_info.role == AppRoles.user:
@@ -46,23 +44,21 @@ async def all(
     raise NotImplementedError()
 
 @router.get("/{name}")
-async def getBandInfo() -> dict:
+async def getBandInfo():
     raise NotImplementedError()
 
 @router.delete("/{name}")
-async def delete(
-    user_info: User=Depends(Authorize())
-) -> dict:
+async def delete(user_info: User=Depends(Authorize())):
     raise NotImplementedError()
 
 @router.get("/{name}/members")
-async def getBandMembers() -> list[str]:
+async def getBandMembers():
     raise NotImplementedError()
 
 @router.post("/{name}/members")
-async def addBandMember() -> list[str]:
+async def addBandMember():
     raise NotImplementedError()
 
 @router.delete("/{name}/members")
-async def removeBandMember() -> list[str]:
+async def removeBandMember():
     raise NotImplementedError()
