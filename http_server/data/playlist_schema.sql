@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS band_members (
     user_id INTEGER NOT NULL,
     created_ts INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
     updated_ts INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    CONSTRAINT unq UNIQUE (band_id, user_id)
     FOREIGN KEY (band_id) REFERENCES bands(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );

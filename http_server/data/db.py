@@ -138,6 +138,30 @@ BAND_BY_MEMBER = """
     WHERE bm.user_id = ?;
 """
 
+BAND_OWNER = """
+    SELECT leader
+    FROM bands
+    WHERE name = ?;
+"""
+
+BAND_ADD_MEMBER = """
+    INSERT INTO band_members
+        (band_id, user_id)
+    VALUES
+        ((SELECT id FROM bands WHERE name = ?), (SELECT id FROM users WHERE name = ?));
+"""
+
+BAND_MEMBERS = """
+    SELECT users.id AS id,
+           users.name AS name
+    FROM band_members
+    JOIN users
+      ON users.id = band_members.user_id
+    JOIN bands
+      ON bands.id = band_members.band_id
+    WHERE bands.name = ?;
+"""
+
 async def init() -> bool:
     global DB_NAME
     DB_NAME = Path(os.path.dirname(__file__), os.environ.get("DB_NAME"))
@@ -243,3 +267,15 @@ async def bandsAll() -> list:
 async def bandByMember(user_id: int) -> bool:
     global BAND_BY_MEMBER
     return await execute(BAND_BY_MEMBER, (user_id,))
+
+async def bandLeader(band_name: str) -> list:
+    global BAND_OWNER
+    return await execute(BAND_OWNER, (band_name,))
+
+async def bandAddMember(band_name: str, user_name: str) -> int:
+    global BAND_ADD_MEMBER
+    return await execute(BAND_ADD_MEMBER, (band_name, user_name))
+
+async def bandMembers(band_name: str) -> list:
+    global BAND_MEMBERS
+    return await execute(BAND_MEMBERS, (band_name,))

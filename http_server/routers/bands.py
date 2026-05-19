@@ -56,8 +56,15 @@ async def getBandMembers():
     raise NotImplementedError()
 
 @router.post("/{name}/members")
-async def addBandMember():
-    raise NotImplementedError()
+async def addBandMember(
+    name: str,
+    user_name: Annotated[str, Form()],
+    user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandLeaderAndMaxMembersEnforce))
+):
+    member_inserted = await db.bandAddMember(name, user_name)
+    if not member_inserted:
+        raise Exception(f"Member {user_name} not inserted into {name} :(")
+    return f"{user_name} added to {name}!"
 
 @router.delete("/{name}/members")
 async def removeBandMember():
