@@ -114,6 +114,30 @@ BANDS_ALL = """
       ON u2.id = bands.leader;
 """
 
+MEMBER_ADD = """
+    INSERT INTO band_members
+        (band_id, user_id)
+    VALUES
+        ((SELECT id FROM bands WHERE name = ?), ?);
+"""
+
+BAND_BY_MEMBER = """
+    SELECT bands.id AS id,
+           bands.name AS name,
+           u2.name AS leader,
+           u1.name AS created_by,
+           datetime(bands.created_ts, 'unixepoch', 'localtime') AS created_ts,
+           datetime(bands.updated_ts, 'unixepoch', 'localtime') AS updated_ts
+    FROM bands
+    JOIN users u1
+      ON u1.id = bands.created_by
+    JOIN users u2
+      ON u2.id = bands.leader
+    JOIN band_members bm
+      ON bm.band_id = bands.id
+    WHERE bm.user_id = ?;
+"""
+
 async def init() -> bool:
     global DB_NAME
     DB_NAME = Path(os.path.dirname(__file__), os.environ.get("DB_NAME"))
@@ -157,6 +181,20 @@ async def execute(query: str, data: tuple=None) -> list | int:
             else:
                 return cursor.rowcount
 
+async def executetransaction(query: list[str], data: list[tuple]=None) -> list | int:
+    global DB_NAME
+    results = None
+    async with asql.connect(DB_NAME, autocommit=True) as db:
+        await db.execute("PRAGMA foreign_keys = ON;")
+        db.row_factory = asql.Row
+        for q,d in zip(query, data):
+            async with db.execute(q, d) as cursor:
+                if cursor.rowcount == -1:
+                    results = await cursor.fetchall()
+                else:
+                    results = cursor.rowcount
+    return results
+
 async def userExists(user_name: str) -> bool:
     global USER_EXISTS
     result = await execute(USER_EXISTS, (user_name,))
@@ -187,8 +225,8 @@ async def deleteUser(name: str) -> int:
     return await execute(DELETE_USER, (name,))
 
 async def bandAdd(band_name: str, user_id: int) -> int:
-    global BAND_ADD
-    await execute(BAND_ADD, (band_name, user_id, user_id))
+    global BAND_ADD, MEMBER_ADD
+    await executetransaction([BAND_ADD, MEMBER_ADD], [(band_name, user_id, user_id), (band_name, user_id)])
 
 async def bandByName(band_name: str) -> list:
     global BAND_BY_NAME
@@ -201,3 +239,7 @@ async def bandCountCreated(user_id: int) -> list:
 async def bandsAll() -> list:
     global BANDS_ALL
     return await execute(BANDS_ALL)
+
+async def bandByMember(user_id: int) -> bool:
+    global BAND_BY_MEMBER
+    return await execute(BAND_BY_MEMBER, (user_id,))

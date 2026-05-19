@@ -42,7 +42,7 @@ async def all(
     if user_info.role == AppRoles.admin:
         return await db.bandsAll()
     elif user_info.role == AppRoles.user:
-        raise NotImplementedError()
+        return await db.bandByMember(user_info.id)
     raise NotImplementedError()
 
 @router.get("/{name}")

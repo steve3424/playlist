@@ -68,3 +68,25 @@ BEGIN
     SET updated_ts = (strftime('%s', 'now'))
     WHERE id = OLD.id;
 END;
+
+----------------------------------------------------------------
+-- BAND MEMBERS ------------------------------------------------
+----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS band_members (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    band_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    created_ts INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    updated_ts INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    FOREIGN KEY (band_id) REFERENCES bands(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TRIGGER IF NOT EXISTS updated_ts_band_members
+AFTER UPDATE ON band_members
+FOR EACH ROW
+BEGIN
+    UPDATE band_members
+    SET updated_ts = (strftime('%s', 'now'))
+    WHERE id = OLD.id;
+END;
