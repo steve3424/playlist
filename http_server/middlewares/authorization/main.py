@@ -13,7 +13,7 @@ class AuthorizationError(Exception):
         super().__init__(message)
 
 class Authorize:
-    def __init__(self, role: AppRoles=None, endpoint_authorization: Awaitable | Callable | None=None):
+    def __init__(self, role: AppRoles=None, endpoint_authorization: Awaitable|Callable|None=None):
         self.role = role if role is not None else AppRoles.admin
         self.endpoint_authorization = endpoint_authorization
         if self.role.value < AppRoles.admin.value and self.endpoint_authorization == None:
