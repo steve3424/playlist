@@ -2,7 +2,7 @@ import logging
 from typing import Annotated
 from fastapi import APIRouter, Form, Depends
 from fastapi.responses import JSONResponse
-from sqlite3.dbapi2 import IntegrityError
+from sqlite3.dbapi2 import IntegrityError, SQLITE_CONSTRAINT_UNIQUE, SQLITE_CONSTRAINT_NOTNULL
 from ..data import db
 from ..middlewares.authorization import band as band_auth
 from ..middlewares.authorization import main as main_auth
@@ -74,16 +74,32 @@ async def deleteBand(
     await db.bandDelete(name, leader[0]["leader"])
     return f"'{name}' deleted!"
 
-# @router.post("/{name}/members/{user_name}")
-# async def addBandMember(
-#     name: str,
-#     user_name: str,
-#     user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandLeaderAndMaxMembersEnforce))
-# ):
-#     member_inserted = await db.bandAddMember(name, user_name)
-#     if not member_inserted:
-#         raise Exception(f"Member {user_name} not inserted into {name} :(")
-#     return f"{user_name} added to {name}!"
+@router.post("/{name}/members/{user_name}")
+async def addBandMember(
+    name: str,
+    user_name: str,
+    user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandLeaderAndNotMaxMembersReached))
+):
+    # NOTE: test cases
+    # 1. insert member twice
+    # 2. band not found
+    # 3. user not found
+    # 4. user cannot add to not-leader band
+    # 5. user cannot break member limit
+    try:
+        member_inserted = await db.bandAddMember(name, user_name)
+        if not member_inserted:
+            raise Exception("DB error!")
+        return f"{user_name} added to {name}!"
+    except IntegrityError as ex:
+        if ex.sqlite_errorcode == SQLITE_CONSTRAINT_UNIQUE:
+            return JSONResponse({"message": f"{user_name} is already a member of {name}!"}, status_code=422)
+        elif ex.sqlite_errorcode == SQLITE_CONSTRAINT_NOTNULL:
+            if str(ex).endswith("user_id"):
+                return JSONResponse({"message": f"{user_name} not found!"}, status_code=422)
+            elif str(ex).endswith("band_id"):
+                return JSONResponse({"message": f"{name} not found!"}, status_code=422)
+        raise ex
 
 # @router.delete("/{name}/members/{user_name}")
 # async def removeBandMember():

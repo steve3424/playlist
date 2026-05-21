@@ -5,7 +5,7 @@ from .main import AuthorizationError
 from ...data import db
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
-BAND_MEMBERS_MAX = 5
+BAND_MEMBERS_MAX = 20
 BAND_CREATE_LIMIT = 2
 
 async def createLimitReached(request: Request, user_info: User):
@@ -25,8 +25,12 @@ async def isBandLeader(request: Request, user_info: User):
     if len(band_leader) < 1 or user_info.id != band_leader[0]["leader"]:
         raise AuthorizationError("Only band leader can do this!")
 
-async def isBandLeaderAndMaxMembersEnforce(request: Request, user_info: User):
-    await isBandLeader(request, user_info)
+async def maxMembersReached(request: Request, user_info: User):
+    band_name = request.path_params['name']
     members = await db.bandMembers(band_name)
     if BAND_MEMBERS_MAX <= len(members):
         raise AuthorizationError(f"Max of {BAND_MEMBERS_MAX} members per band!")
+
+async def isBandLeaderAndNotMaxMembersReached(request: Request, user_info: User):
+    await isBandLeader(request, user_info)
+    await maxMembersReached(request, user_info)

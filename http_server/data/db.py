@@ -171,12 +171,12 @@ BAND_MEMBER_DELETE = """
       AND user_id = ?;
 """
 
-# BAND_ADD_MEMBER = """
-#     INSERT INTO band_members
-#         (band_id, user_id)
-#     VALUES
-#         ((SELECT id FROM bands WHERE name = ?), (SELECT id FROM users WHERE name = ?));
-# """
+BAND_ADD_MEMBER = """
+    INSERT INTO band_members
+        (band_id, user_id)
+    VALUES
+        ((SELECT id FROM bands WHERE name = ?), (SELECT id FROM users WHERE name = ?));
+"""
 
 # BAND_BY_MEMBER_AND_NAME = """
 #     SELECT band_id
@@ -298,9 +298,8 @@ async def bandMembers(band_name: str) -> list:
 async def bandDelete(band_name: str, member_id: int):
     return await executetransaction([BAND_MEMBER_DELETE, BAND_DELETE], [(band_name, member_id), (band_name,)])
 
-# async def bandAddMember(band_name: str, user_name: str) -> int:
-#     global BAND_ADD_MEMBER
-#     return await execute(BAND_ADD_MEMBER, (band_name, user_name))
+async def bandAddMember(band_name: str, user_name: str) -> int:
+    return await execute(BAND_ADD_MEMBER, (band_name, user_name))
 
 # async def bandByMemberAndName(band_name: str, user_id: int) -> list:
 #     return await execute(BAND_BY_MEMBER_AND_NAME, (band_name, user_id))
