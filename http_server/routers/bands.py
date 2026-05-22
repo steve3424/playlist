@@ -2,6 +2,7 @@ import logging
 from typing import Annotated
 from fastapi import APIRouter, Form, Depends, Query
 from fastapi.responses import JSONResponse
+import aiosqlite as asql
 from sqlite3.dbapi2 import IntegrityError, SQLITE_CONSTRAINT_UNIQUE, SQLITE_CONSTRAINT_NOTNULL
 from ..data import db
 from ..middlewares.authorization import band as band_auth
@@ -37,6 +38,7 @@ async def createBand(
 
 @router.get("")
 async def all(
+    include_members: Annotated[bool, Query()]=False,
     user_info: User=Depends(Authorize(AppRoles.user, main_auth.noop))
 ):
     # TODO: include_members param
@@ -51,41 +53,9 @@ async def getBand(
     include_members: Annotated[bool, Query()]=False,
     user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandMember))
 ):
-    # TODO: include_members param
     results = None
     if include_members:
-        res = {
-            # "band_name": {
-            #     "id": 1,
-            #     "name": "band",
-            #     "leader": "admin",
-            #     "ts": 1,
-            #     "members": [
-            #         {
-            #             "id": 2,
-            #             "name": "user1"
-            #         },
-            #     ]
-            # }
-        }
-        members = await db.bandByNameWithMembers(name)
-        if members:
-            results = {
-                members[0]["band_name"] : {
-                    "id": members[0]["id"],
-                    "name": members[0]["band_name"],
-                    "leader": members[0]["leader"],
-                    "created_by": members[0]["created_by"],
-                    "created_ts": members[0]["created_ts"],
-                    "updated_ts": members[0]["updated_ts"],
-                    "members": [
-                        {
-                            "id": m["user_id"],
-                            "name": m["user_name"]
-                        } for m in members
-                    ]
-                }
-            }
+        results = processBandMembers(await db.bandByNameWithMembers(name))
     else:
         results = await db.bandByName(name)
 
@@ -144,3 +114,26 @@ async def addBandMember(
 # @router.delete("/{name}/members/{user_name}")
 # async def removeBandMember():
 #     raise NotImplementedError()
+
+
+def processBandMembers(members: list[asql.Row]) -> list[dict]:
+    bands = {}
+    for m in members:
+        if m["id"] not in bands:
+            bands[m["id"]] = {
+                "id": m["id"],
+                "name": m["band_name"],
+                "leader": m["leader"],
+                "created_by": m["created_by"],
+                "created_ts": m["created_ts"],
+                "updated_ts": m["updated_ts"],
+                "members": []
+            }
+        bands[m["id"]]["members"].append(
+            {
+                "id": m["user_id"],
+                "name": m["user_name"]
+            }
+        )
+    
+    return [key for _,key in bands.items()]
