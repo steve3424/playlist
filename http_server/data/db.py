@@ -107,6 +107,28 @@ BAND_BY_NAME = """
     WHERE bands.name = ?;
 """
 
+BAND_BY_NAME_WITH_MEMBERS = """
+    SELECT b1.id AS id,
+           b1.name AS band_name,
+           u2.name AS leader,
+           u2.id AS leader_id,
+           u3.name AS created_by,
+           datetime(b1.created_ts, 'unixepoch', 'localtime') AS created_ts,
+           datetime(b1.updated_ts, 'unixepoch', 'localtime') AS updated_ts,
+           u1.name AS user_name,
+           u1.id AS user_id
+    FROM band_members
+    JOIN bands b1
+      ON band_members.band_id = b1.id
+    JOIN users u1
+      ON band_members.user_id = u1.id
+    JOIN users u2
+      ON b1.leader = u2.id
+    JOIN users u3
+      ON b1.created_by = u3.id
+    WHERE b1.name = ?;
+"""
+
 BANDS_ALL = """
     SELECT bands.id AS id,
            bands.name AS name,
@@ -178,12 +200,12 @@ BAND_ADD_MEMBER = """
         ((SELECT id FROM bands WHERE name = ?), (SELECT id FROM users WHERE name = ?));
 """
 
-# BAND_BY_MEMBER_AND_NAME = """
-#     SELECT band_id
-#     FROM band_members
-#     WHERE band_id = (SELECT id FROM bands WHERE name = ?)
-#       AND user_id = ?;
-# """
+BAND_BY_MEMBER_AND_NAME = """
+    SELECT band_id
+    FROM band_members
+    WHERE band_id = (SELECT id FROM bands WHERE name = ?)
+      AND user_id = ?;
+"""
 
 async def init() -> bool:
     global DB_NAME
@@ -283,6 +305,9 @@ async def bandAdd(band_name: str, user_id: int):
 async def bandByName(band_name: str):
     return await execute(BAND_BY_NAME, (band_name,))
 
+async def bandByNameWithMembers(band_name: str) -> list:
+    return await execute(BAND_BY_NAME_WITH_MEMBERS, (band_name,))
+
 async def bandsAll() -> list:
     return await execute(BANDS_ALL)
 
@@ -301,5 +326,5 @@ async def bandDelete(band_name: str, member_id: int):
 async def bandAddMember(band_name: str, user_name: str) -> int:
     return await execute(BAND_ADD_MEMBER, (band_name, user_name))
 
-# async def bandByMemberAndName(band_name: str, user_id: int) -> list:
-#     return await execute(BAND_BY_MEMBER_AND_NAME, (band_name, user_id))
+async def bandByMemberAndName(band_name: str, user_id: int) -> list:
+    return await execute(BAND_BY_MEMBER_AND_NAME, (band_name, user_id))

@@ -1,6 +1,6 @@
 import logging
 from typing import Annotated
-from fastapi import APIRouter, Form, Depends
+from fastapi import APIRouter, Form, Depends, Query
 from fastapi.responses import JSONResponse
 from sqlite3.dbapi2 import IntegrityError, SQLITE_CONSTRAINT_UNIQUE, SQLITE_CONSTRAINT_NOTNULL
 from ..data import db
@@ -48,10 +48,50 @@ async def all(
 @router.get("/{name}")
 async def getBand(
     name: str,
+    include_members: Annotated[bool, Query()]=False,
     user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandMember))
 ):
     # TODO: include_members param
-    return await db.bandByName(name)
+    results = None
+    if include_members:
+        res = {
+            # "band_name": {
+            #     "id": 1,
+            #     "name": "band",
+            #     "leader": "admin",
+            #     "ts": 1,
+            #     "members": [
+            #         {
+            #             "id": 2,
+            #             "name": "user1"
+            #         },
+            #     ]
+            # }
+        }
+        members = await db.bandByNameWithMembers(name)
+        if members:
+            results = {
+                members[0]["band_name"] : {
+                    "id": members[0]["id"],
+                    "name": members[0]["band_name"],
+                    "leader": members[0]["leader"],
+                    "created_by": members[0]["created_by"],
+                    "created_ts": members[0]["created_ts"],
+                    "updated_ts": members[0]["updated_ts"],
+                    "members": [
+                        {
+                            "id": m["user_id"],
+                            "name": m["user_name"]
+                        } for m in members
+                    ]
+                }
+            }
+    else:
+        results = await db.bandByName(name)
+
+    if not results:
+        return JSONResponse({"message": "Not found!"}, status_code=404)
+    return results
 
 @router.delete("/{name}")
 async def deleteBand(
