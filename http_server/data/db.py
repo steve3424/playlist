@@ -143,6 +143,27 @@ BANDS_ALL = """
       ON u2.id = bands.leader;
 """
 
+BANDS_ALL_WITH_MEMBERS = """
+    SELECT b1.id AS id,
+           b1.name AS band_name,
+           u2.name AS leader,
+           u2.id AS leader_id,
+           u3.name AS created_by,
+           datetime(b1.created_ts, 'unixepoch', 'localtime') AS created_ts,
+           datetime(b1.updated_ts, 'unixepoch', 'localtime') AS updated_ts,
+           u1.name AS user_name,
+           u1.id AS user_id
+    FROM band_members
+    JOIN bands b1
+      ON band_members.band_id = b1.id
+    JOIN users u1
+      ON band_members.user_id = u1.id
+    JOIN users u2
+      ON b1.leader = u2.id
+    JOIN users u3
+      ON b1.created_by = u3.id;
+"""
+
 BAND_BY_MEMBER = """
     SELECT bands.id AS id,
            bands.name AS name,
@@ -158,6 +179,32 @@ BAND_BY_MEMBER = """
     JOIN band_members bm
       ON bm.band_id = bands.id
     WHERE bm.user_id = ?;
+"""
+
+BAND_BY_MEMBER_WITH_MEMBER = """
+    SELECT b1.id AS id,
+           b1.name AS band_name,
+           u2.name AS leader,
+           u2.id AS leader_id,
+           u3.name AS created_by,
+           datetime(b1.created_ts, 'unixepoch', 'localtime') AS created_ts,
+           datetime(b1.updated_ts, 'unixepoch', 'localtime') AS updated_ts,
+           u1.name AS user_name,
+           u1.id AS user_id
+    FROM band_members
+    JOIN bands b1
+      ON band_members.band_id = b1.id
+    JOIN users u1
+      ON band_members.user_id = u1.id
+    JOIN users u2
+      ON b1.leader = u2.id
+    JOIN users u3
+      ON b1.created_by = u3.id
+    WHERE band_members.band_id IN (
+        SELECT band_id
+        FROM band_members
+        WHERE user_id = ?
+    );
 """
 
 BAND_LEADER = """
@@ -311,8 +358,14 @@ async def bandByNameWithMembers(band_name: str) -> list:
 async def bandsAll() -> list:
     return await execute(BANDS_ALL)
 
+async def bandsAllWithMembers() -> list:
+    return await execute(BANDS_ALL_WITH_MEMBERS)
+
 async def bandByMember(user_id: int) -> bool:
     return await execute(BAND_BY_MEMBER, (user_id,))
+
+async def bandByMemberWithMembers(user_id: int) -> bool:
+    return await execute(BAND_BY_MEMBER_WITH_MEMBER, (user_id,))
 
 async def bandLeader(band_name: str) -> list:
     return await execute(BAND_LEADER, (band_name,))

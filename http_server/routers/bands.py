@@ -43,8 +43,12 @@ async def all(
 ):
     # TODO: include_members param
     if user_info.role == AppRoles.admin:
+        if include_members:
+            return processBandMembers(await db.bandsAllWithMembers())
         return await db.bandsAll()
     elif user_info.role == AppRoles.user:
+        if include_members:
+            return processBandMembers(await db.bandByMemberWithMembers(user_info.id))
         return await db.bandByMember(user_info.id)
 
 @router.get("/{name}")
