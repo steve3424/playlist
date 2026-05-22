@@ -1,8 +1,8 @@
 import logging
+import aiosqlite as asql
 from typing import Annotated
 from fastapi import APIRouter, Form, Depends, Query
 from fastapi.responses import JSONResponse
-import aiosqlite as asql
 from sqlite3.dbapi2 import IntegrityError, SQLITE_CONSTRAINT_UNIQUE, SQLITE_CONSTRAINT_NOTNULL
 from ..data import db
 from ..middlewares.authorization import band as band_auth
@@ -130,6 +130,24 @@ async def removeBandMember(
     if num_deleted == 0:
         return f"{user_name} not in band!"
     return f"Removed {user_name}!"
+
+# @router.post("/{name}/songs/{song_name}")
+# auth: must be member of band
+# func: check band exists
+#       check song exists
+# @router.get("/{name}/songs")
+# auth: must be member of band
+# func: check band exists
+# @router.get("/{name}/songs/{song_name}")
+# auth: must be member of band
+# func: check band exists
+#       check song exists
+# @router.delete("/{name}/songs/{song_name}")
+# auth: must be member of band
+#       TODO: anything else ?
+# func: check band exists
+#       check song exists
+# TODO: add include_songs in band endpoints for admin?
 
 def processBandMembers(members: list[asql.Row]) -> list[dict]:
     bands = {}
