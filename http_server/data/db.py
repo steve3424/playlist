@@ -240,6 +240,12 @@ BAND_MEMBER_DELETE = """
       AND user_id = ?;
 """
 
+BAND_MEMBER_DELETE_BY_NAME = """
+    DELETE FROM band_members
+    WHERE band_id = (SELECT id FROM bands WHERE name = ?)
+      AND user_id = (SELECT id FROM users WHERE name = ?);
+"""
+
 BAND_ADD_MEMBER = """
     INSERT INTO band_members
         (band_id, user_id)
@@ -381,3 +387,6 @@ async def bandAddMember(band_name: str, user_name: str) -> int:
 
 async def bandByMemberAndName(band_name: str, user_id: int) -> list:
     return await execute(BAND_BY_MEMBER_AND_NAME, (band_name, user_id))
+
+async def bandMemberDelete(band_name: str, user_name: str):
+    return await execute(BAND_MEMBER_DELETE_BY_NAME, (band_name, user_name))

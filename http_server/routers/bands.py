@@ -112,13 +112,24 @@ async def addBandMember(
             if str(ex).endswith("user_id"):
                 return JSONResponse({"message": f"{user_name} not found!"}, status_code=422)
             elif str(ex).endswith("band_id"):
-                return JSONResponse({"message": f"{name} not found!"}, status_code=422)
+                return JSONResponse({"message": f"{name} not found!"}, status_code=404)
         raise ex
 
-# @router.delete("/{name}/members/{user_name}")
-# async def removeBandMember():
-#     raise NotImplementedError()
-
+@router.delete("/{name}/members/{user_name}")
+async def removeBandMember(
+    name: str,
+    user_name: str,
+    user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandLeader))
+):
+    band_info = await db.bandByName(name)
+    if not band_info:
+        return JSONResponse({"message": f"{name} not found"}, status_code=404)
+    if user_name == band_info[0]["leader"]:
+        return JSONResponse({"message": "Cannot delete band leader!"}, status_code=422)
+    num_deleted = await db.bandMemberDelete(name, user_name)
+    if num_deleted == 0:
+        return f"{user_name} not in band!"
+    return f"Removed {user_name}!"
 
 def processBandMembers(members: list[asql.Row]) -> list[dict]:
     bands = {}
