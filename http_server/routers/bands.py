@@ -172,8 +172,7 @@ async def addSong(
         if ex.sqlite_errorcode == SQLITE_CONSTRAINT_UNIQUE:
             return JSONResponse({"message": f"{song_name} already exists!"}, status_code=422)
         raise ex
-# func: check band exists
-#       check song exists
+
 # @router.get("/{name}/songs")
 # auth: must be member of band
 # func: check band exists
