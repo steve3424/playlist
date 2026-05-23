@@ -19,4 +19,4 @@ async def save(file: UploadFile, file_path: Path):
             f.write(chunk)
 
 def exists(file_path: Path) -> bool:
-    pass
+    return os.path.exists(file_path)

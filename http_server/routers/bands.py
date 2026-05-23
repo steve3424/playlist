@@ -183,21 +183,36 @@ async def addSong(
     except Exception as ex:
         return JSONResponse({"message": "Error storing file. Please try again."}, status_code=500)
 
-# @router.get("/{name}/songs")
-# auth: must be member of band
-# func: check band exists
+@router.get("/{name}/songs")
+async def getAllSongs(
+    name: str,
+    user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandMember))
+):
+    songs = await db.songsGetByBand(name)
+    if not songs:
+        return JSONResponse({"message": "Not found!"}, status_code=404)
+    return songs
 
-# @router.get("/{name}/songs/{song_name}")
-# auth: must be member of band
-# func: check band exists
-#       check song exists
+@router.get("/{name}/songs/{song_name}")
+async def getSong(
+    name: str,
+    song_name: str,
+    user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandMember))
+):
+    song = await db.songGetByNameAndBand(name, song_name)
+    if not song:
+        return JSONResponse({"message": "Not found!"}, status_code=404)
+    return song
 
-# @router.delete("/{name}/songs/{song_name}")
-# auth: must be member of band
-#       TODO: anything else ?
-# func: check band exists
-#       check song exists
-# TODO: add include_songs in band endpoints for admin?
+@router.delete("/{name}/songs/{song_name}")
+async def deleteSong(
+    name: str,
+    song_name: str,
+    user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandMember))
+):
+    # TODO: any other auth?
+    await db.songDelete(name, song_name)
+    return "Deleted!"
 
 def processBandMembers(members: list[asql.Row]) -> list[dict]:
     bands = {}
