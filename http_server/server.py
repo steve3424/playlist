@@ -63,6 +63,7 @@ def createApp(redis_host: str, redis_port: int, environment: str) -> fastapi.Fas
     )
 
     # NOTE: Middlewares are run in reverse order of how they are added.
+    # TODO: rate limiting
     app.add_middleware(authentication.Authenticate)
 
     app.add_api_route("/health", health)
