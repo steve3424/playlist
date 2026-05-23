@@ -16,7 +16,7 @@ from contextlib import asynccontextmanager
 from common import tickets
 from .middlewares import authentication
 from .routers import bands, users, sessions
-from .data import db
+from .data import db, files
 
 LOGGER = logging.getLogger("playlist")
 
@@ -40,6 +40,7 @@ async def appLife(app: fastapi.FastAPI, *args, **kwargs):
     auth_init = await authentication.init(kwargs["redis_host"], kwargs["redis_port"])
     if not auth_init:
         raise StartupException("Auth failed to initialize!")
+    await files.init()
 
     yield
 

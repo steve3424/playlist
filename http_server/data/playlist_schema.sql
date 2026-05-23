@@ -91,3 +91,27 @@ BEGIN
     SET updated_ts = (strftime('%s', 'now'))
     WHERE id = OLD.id;
 END;
+
+----------------------------------------------------------------
+-- SONGS -------------------------------------------------------
+----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS songs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(64) NOT NULL,
+    band_id INTEGER NOT NULL,
+    created_by INTEGER NOT NULL,
+    created_ts INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    updated_ts INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    CONSTRAINT u UNIQUE (name, band_id),
+    FOREIGN KEY (band_id) REFERENCES bands(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+CREATE TRIGGER IF NOT EXISTS updated_ts_songs
+AFTER UPDATE ON songs
+FOR EACH ROW
+BEGIN
+    UPDATE songs
+    SET updated_ts = (strftime('%s', 'now'))
+    WHERE id = OLD.id;
+END;

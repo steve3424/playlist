@@ -1,10 +1,12 @@
 import logging
+import os
 import aiosqlite as asql
+from pathlib import Path
 from typing import Annotated
-from fastapi import APIRouter, Form, Depends, Query
+from fastapi import APIRouter, Form, Depends, Query, UploadFile, File
 from fastapi.responses import JSONResponse
 from sqlite3.dbapi2 import IntegrityError, SQLITE_CONSTRAINT_UNIQUE, SQLITE_CONSTRAINT_NOTNULL
-from ..data import db
+from ..data import db, files
 from ..middlewares.authorization import band as band_auth
 from ..middlewares.authorization import main as main_auth
 from ..middlewares.authorization.main import Authorize
@@ -13,6 +15,9 @@ from ..middlewares.authorization.models import User, AppRoles
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 BAND_NAME_MIN_LEN = 1
 BAND_NAME_MAX_LEN = 64
+SONG_NAME_MIN_LEN = 1
+SONG_NAME_MAX_LEN = 64
+FILE_SIZE_MAX = 1024 * 1024 * 50 # 50mb
 
 router = APIRouter(prefix="/bands", tags=["bands"])
 
@@ -131,8 +136,42 @@ async def removeBandMember(
         return f"{user_name} not in band!"
     return f"Removed {user_name}!"
 
-# @router.post("/{name}/songs/{song_name}")
-# auth: must be member of band
+@router.post("/{name}/songs/{song_name}")
+async def addSong(
+    name: str,
+    song_name: str,
+    file: UploadFile = File(...),
+    user_info: User=Depends(Authorize(AppRoles.user, band_auth.isBandMember))
+):
+    try:
+        # TODO: should we make song_name param optional and
+        #       use filename if not provided?
+        if not song_name:
+            song_name = ""
+        song_name = song_name.strip()
+        if len(song_name) < SONG_NAME_MIN_LEN:
+            return JSONResponse({"message": f"Song name must be at least {SONG_NAME_MIN_LEN} characters, but was {len(song_name)}!"}, status_code=422)
+        if SONG_NAME_MAX_LEN < len(song_name):
+            return JSONResponse({"message": f"Song name can't be longer than {SONG_NAME_MAX_LEN} characters, but was {len(song_name)}"}, status_code=422)
+
+        if file.size == 0:
+            return JSONResponse({"message": "File is empty!"}, status_code=422)
+        if FILE_SIZE_MAX < file.size:
+            return JSONResponse({"message": f"File must be < {FILE_SIZE_MAX} bytes, but is {file.size} bytes!"}, status_code=413)
+
+        # TODO: limit number of songs
+        # TODO: detect and enforce file type
+        file_dir = files.DATA_DIR / name
+        file_dir.mkdir(exist_ok=True)
+        await files.save(file, file_dir / f"{song_name}.pdf")
+        await db.songAdd(song_name, name, user_info.id)
+        return f"{song_name} added!"
+    except IntegrityError as ex:
+        if ex.sqlite_errorcode == SQLITE_CONSTRAINT_NOTNULL:
+            return JSONResponse({"message": f"{name} not found!"}, status_code=404)
+        if ex.sqlite_errorcode == SQLITE_CONSTRAINT_UNIQUE:
+            return JSONResponse({"message": f"{song_name} already exists!"}, status_code=422)
+        raise ex
 # func: check band exists
 #       check song exists
 # @router.get("/{name}/songs")

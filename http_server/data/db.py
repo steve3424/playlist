@@ -260,6 +260,13 @@ BAND_BY_MEMBER_AND_NAME = """
       AND user_id = ?;
 """
 
+SONG_ADD = """
+    INSERT INTO songs
+        (name, band_id, created_by)
+    VALUES
+        (?, (SELECT id FROM bands WHERE name = ?), ?);
+"""
+
 async def init() -> bool:
     global DB_NAME
     DB_NAME = Path(os.path.dirname(__file__), os.environ.get("DB_NAME"))
@@ -390,3 +397,6 @@ async def bandByMemberAndName(band_name: str, user_id: int) -> list:
 
 async def bandMemberDelete(band_name: str, user_name: str):
     return await execute(BAND_MEMBER_DELETE_BY_NAME, (band_name, user_name))
+
+async def songAdd(song_name: str, band_name: str, user_id: int):
+    return await execute(SONG_ADD, (song_name, band_name, user_id))
