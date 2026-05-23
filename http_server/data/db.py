@@ -267,6 +267,22 @@ SONG_ADD = """
         (?, (SELECT id FROM bands WHERE name = ?), ?);
 """
 
+SONG_GET_BY_NAME_AND_BAND = """
+    SELECT songs.id AS id,
+           songs.name AS name,
+           bands.name AS band,
+           users.name AS created_by,
+           datetime(users.created_ts, 'unixepoch', 'localtime') AS created_ts,
+           datetime(users.updated_ts, 'unixepoch', 'localtime') AS updated_ts
+    FROM songs
+    JOIN bands
+      ON songs.band_id = bands.id
+    JOIN users
+      ON songs.created_by = users.id
+    WHERE songs.band_id = (SELECT id FROM bands WHERE name = ?)
+      AND songs.name = ?;
+"""
+
 async def init() -> bool:
     global DB_NAME
     DB_NAME = Path(os.path.dirname(__file__), os.environ.get("DB_NAME"))
@@ -400,3 +416,6 @@ async def bandMemberDelete(band_name: str, user_name: str):
 
 async def songAdd(song_name: str, band_name: str, user_id: int):
     return await execute(SONG_ADD, (song_name, band_name, user_id))
+
+async def songGetByNameAndBand(band_name:str, song_name: str):
+    return await execute(SONG_GET_BY_NAME_AND_BAND, (band_name, song_name))

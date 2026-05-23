@@ -17,3 +17,6 @@ async def save(file: UploadFile, file_path: Path):
     with file_path.open("wb") as f:
         while chunk := await file.read(FILE_CHUNK_SIZE):
             f.write(chunk)
+
+def exists(file_path: Path) -> bool:
+    pass
