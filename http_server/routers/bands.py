@@ -1,7 +1,5 @@
 import logging
-import os
 import aiosqlite as asql
-from pathlib import Path
 from typing import Annotated
 from fastapi import APIRouter, Form, Depends, Query, UploadFile, File
 from fastapi.responses import JSONResponse
@@ -19,7 +17,7 @@ SONG_NAME_MIN_LEN = 1
 SONG_NAME_MAX_LEN = 64
 FILE_SIZE_MAX = 1024 * 1024 * 50 # 50mb
 
-router = APIRouter(prefix="/bands", tags=["bands"])
+router = APIRouter(prefix="/api/v1/bands", tags=["bands"])
 
 @router.post("")
 async def createBand(

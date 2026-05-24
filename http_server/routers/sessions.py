@@ -12,7 +12,7 @@ from ..middlewares.authorization.main import Authorize
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
 
-router = APIRouter(prefix="/sessions", tags=["sessions"])
+router = APIRouter(prefix="/api/v1/sessions", tags=["sessions"])
 
 @router.post("")
 async def login(

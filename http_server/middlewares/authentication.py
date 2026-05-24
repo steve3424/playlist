@@ -63,8 +63,8 @@ class Authenticate(BaseHTTPMiddleware):
                 "GET:/openapi.json",
                 "GET:/health",
             }
-            login_endpoint = "POST:/sessions"
-            register_endpoint = "POST:/users"
+            login_endpoint = "POST:/api/v1/sessions"
+            register_endpoint = "POST:/api/v1/users"
 
             requested_endpoint = f"{request.method}:{request.url.path}"
             if requested_endpoint in open_endpoints:
