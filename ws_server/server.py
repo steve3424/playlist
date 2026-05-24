@@ -216,8 +216,8 @@ def main(host: str, port: int, redis_host: str, redis_port: int, environment: st
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--host", type=str, default="0.0.0.0")
-    arg_parser.add_argument("--port", type=int, default=8080)
+    arg_parser.add_argument("--host", type=str, default="localhost")
+    arg_parser.add_argument("--port", type=int, default=8888)
     arg_parser.add_argument("--redis-host", type=str, default="localhost")
     arg_parser.add_argument("--redis-port", type=int, default=6379)
     arg_parser.add_argument("--environment", type=str, default="dev", choices=["dev", "prod"])
