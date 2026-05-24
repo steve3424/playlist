@@ -54,6 +54,8 @@ def health() -> PlainTextResponse:
 
 def createApp(redis_host: str, redis_port: int, environment: str) -> fastapi.FastAPI:
     app = fastapi.FastAPI(
+        docs_url="/api/docs",
+        openapi_url="/api/openapi.json",
         lifespan=lambda app: appLife(
             app,
             redis_host=redis_host,
@@ -74,8 +76,8 @@ def createApp(redis_host: str, redis_port: int, environment: str) -> fastapi.Fas
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--host",        type=str, default="0.0.0.0")
-    arg_parser.add_argument("--port",        type=int, default=80)
+    arg_parser.add_argument("--host",        type=str, default="localhost")
+    arg_parser.add_argument("--port",        type=int, default=8000)
     arg_parser.add_argument("--redis-host",  type=str, default="localhost")
     arg_parser.add_argument("--redis-port",  type=int, default=6379)
     arg_parser.add_argument("--environment", type=str, default="dev", choices=["dev", "prod"])
