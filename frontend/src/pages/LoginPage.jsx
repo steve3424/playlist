@@ -6,6 +6,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [user_name, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showError, setShowError] = useState(false);
   const { setUser } = useAuth();
 
   const handleSubmit = async (event) => {
@@ -33,12 +34,16 @@ export default function LoginPage() {
       // navigate("/welcome");
     } catch (error) {
       console.log('Error: ', error);
+      // Trigger error animation
+      setShowError(true);
+      // Remove animation class after animation completes (2s is the fade duration)
+      setTimeout(() => setShowError(false), 2000);
     }
   };
 
   return (
     <div className="container">
-      <form className="login-form" onSubmit={handleSubmit}>
+      <form className={`login-form ${showError ? 'error' : ''}`} onSubmit={handleSubmit}>
         <h1>Login</h1>
 
         <input

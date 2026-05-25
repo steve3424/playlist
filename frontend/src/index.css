@@ -151,6 +151,33 @@ body::after {
   transform: translateY(0);
 }
 
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-8px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(8px);
+  }
+}
+
+@keyframes fadeFromRed {
+  0% {
+    border-color: rgba(239, 68, 68, 1);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+  }
+  100% {
+    border-color: rgba(71, 85, 105, 0.55);
+    box-shadow: none;
+  }
+}
+
+.login-form.error {
+  animation: shake 0.5s ease-in-out, fadeFromRed 2s ease-out;
+}
+
 @media (max-width: 640px) {
   .page-content {
     padding: 1.25rem;

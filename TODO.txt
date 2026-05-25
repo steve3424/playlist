@@ -1,0 +1,8 @@
+- API should use ID's
+- Standardize response structure
+- /content path for files
+- Start populating front end w/ data
+- cookie security
+- csrf
+- no need to encrypt tickets
+- Look at bitwarden problems
