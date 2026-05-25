@@ -21,10 +21,11 @@ USERNAME_MAX_LEN = 32
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
-@router.get("/me")
-async def me(
+@router.get("/whoami")
+async def whoami(
     user_info: User=Depends(Authorize(AppRoles.user, noop))
 ):
+    user_info.session_id = None
     return user_info
 
 @router.post("")
