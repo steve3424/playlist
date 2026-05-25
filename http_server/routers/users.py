@@ -9,7 +9,8 @@ from ..data import db
 from ..middlewares import authentication
 from ..middlewares.authorization import user as user_auth
 from ..middlewares.authorization.models import User, AppRoles
-from ..middlewares.authorization.main import Authorize
+from ..middlewares.authorization.main import Authorize, noop
+
 
 
 LOGGER = logging.getLogger(f"playlist.{__name__}")
@@ -19,6 +20,12 @@ USERNAME_MIN_LEN = 1
 USERNAME_MAX_LEN = 32
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
+
+@router.get("/me")
+async def me(
+    user_info: User=Depends(Authorize(AppRoles.user, noop))
+):
+    return user_info
 
 @router.post("")
 async def register(
