@@ -60,35 +60,6 @@ body::after {
   flex-direction: column;
 }
 
-.nav {
-  background: rgba(10, 18, 30, 0.95);
-  border-bottom: 1px solid rgba(71, 85, 105, 0.35);
-  display: flex;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.nav a {
-  color: var(--text);
-  text-decoration: none;
-  padding: 0.75rem 1rem;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.85);
-  transition: all 0.2s ease;
-  letter-spacing: 0.04em;
-}
-
-.nav a:hover,
-.nav a:focus-visible {
-  border-color: rgba(56, 189, 248, 0.45);
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.08);
-  color: #f8fafc;
-}
-
 .page-content {
   flex: 1;
   display: flex;
@@ -189,10 +160,5 @@ body::after {
     width: 100%;
     padding: 1.75rem;
     border-radius: 20px;
-  }
-
-  .nav {
-    padding: 1rem;
-    justify-content: center;
   }
 }

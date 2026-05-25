@@ -1,0 +1,39 @@
+.app-header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  padding: 1.5rem 2rem;
+  z-index: 100;
+}
+
+.sign-out-button {
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #ef4444;
+  padding: 0.625rem 1.25rem;
+  border-radius: 12px;
+  font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: lowercase;
+}
+
+.sign-out-button:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #b91c1c;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.18);
+}
+
+.sign-out-button:active {
+  transform: scale(0.98);
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.sign-out-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

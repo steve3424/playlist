@@ -1,17 +1,40 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthProvider";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
+  const navigate = useNavigate();
+  const [user_name, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const { setUser } = useAuth();
 
-  function handleSubmit(event) {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    try {
+      console.log("logging in...")
+      const response = await fetch('http://localhost/api/v1/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        credentials: 'include',
+        body: new URLSearchParams({
+          user_name,
+          password,
+        })
+      });
 
-    console.log("Username:", username);
-    console.log("Password:", password);
-
-    alert("Login submitted");
-  }
+      const result = await response.json();
+      if (!response.ok) {
+        console.log("logging in error")
+        throw new Error(result.message || 'Login failed');
+      }
+      setUser(result.name);
+      // navigate("/welcome");
+    } catch (error) {
+      console.log('Error: ', error);
+    }
+  };
 
   return (
     <div className="container">
@@ -21,7 +44,7 @@ export default function LoginPage() {
         <input
           type="text"
           placeholder="Username"
-          value={username}
+          value={user_name}
           onChange={(event) => setUsername(event.target.value)}
         />
 

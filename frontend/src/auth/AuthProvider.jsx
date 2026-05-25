@@ -1,30 +1,32 @@
-// AuthProvider.jsx
 import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  console.log("AuthProvider called")
 
   useEffect(() => {
     async function checkAuth() {
+      console.log("checkAuth called")
       try {
-        const response = await fetch("/api/session", {
+
+        const response = await fetch("http://localhost/api/v1/users/whoami", {
           credentials: "include",
         });
 
         if (response.ok) {
           const data = await response.json();
-          setUser(data.user);
+          setUser(data.name);
         } else {
           setUser(null);
         }
       } catch (err) {
-        console.error(err);
         setUser(null);
       } finally {
-        setLoading(false);
+        console.log("checkAuth finished")
+        setIsLoading(false);
       }
     }
 
@@ -35,8 +37,9 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         user,
-        loading,
+        setUser,
         authenticated: !!user,
+        isLoading,
       }}
     >
       {children}
