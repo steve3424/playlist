@@ -40,7 +40,9 @@ async def logout(
     user_info: User=Depends(Authorize(AppRoles.user, user_auth.checkUserName))
 ):
     await authentication.sessionDelete(name)
-    return JSONResponse({"message": f"'{name}' logged out!"}, status_code=200)
+    response = JSONResponse({"message": f"'{name}' logged out!"}, status_code=200)
+    response.delete_cookie(key=authentication.SESSION_COOKIE_NAME)
+    return response
 
 # TODO: allow session_id and create new auth method to check name/session_id
 @router.get("/{name}")
