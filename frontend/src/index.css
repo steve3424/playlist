@@ -1,0 +1,198 @@
+:root {
+  color-scheme: dark;
+  --bg: #08101f;
+  --surface: #111b2e;
+  --surface-strong: #14243b;
+  --panel: #0f172d;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent-strong: #60a5fa;
+  --border: rgba(148, 163, 184, 0.35);
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 18%),
+    radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.08), transparent 18%),
+    linear-gradient(180deg, #061116 0%, #02070f 100%);
+  color: var(--text);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02) 0,
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 25% 18%, rgba(56, 189, 248, 0.08), transparent 12%),
+    radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.06), transparent 16%);
+  pointer-events: none;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  background: rgba(10, 18, 30, 0.95);
+  border-bottom: 1px solid rgba(71, 85, 105, 0.35);
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.nav a {
+  color: var(--text);
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.85);
+  transition: all 0.2s ease;
+  letter-spacing: 0.04em;
+}
+
+.nav a:hover,
+.nav a:focus-visible {
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.08);
+  color: #f8fafc;
+}
+
+.page-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.container {
+  width: min(100%, 420px);
+}
+
+.login-form {
+  position: relative;
+  background: rgba(12, 22, 36, 0.98);
+  border: 1px solid rgba(71, 85, 105, 0.55);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow: hidden;
+}
+
+.login-form::before {
+  content: "DEV > LOGIN";
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.55rem 1rem;
+  font-size: 0.75rem;
+  font-variant: small-caps;
+  color: rgba(56, 189, 248, 0.8);
+  letter-spacing: 0.12em;
+  background: rgba(6, 13, 26, 0.8);
+  border-bottom-left-radius: 16px;
+}
+
+.login-form h1 {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  letter-spacing: 0.04em;
+  color: #f8fafc;
+}
+
+.login-form input {
+  width: 100%;
+  border: 1px solid rgba(71, 85, 105, 0.85);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.95);
+  color: var(--text);
+  padding: 0.95rem 1rem;
+  font: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-form input::placeholder {
+  color: var(--muted);
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: rgba(56, 189, 248, 0.9);
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+}
+
+.login-form button {
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  color: #041f3d;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 1), rgba(14, 165, 233, 1));
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: transform 0.2s, filter 0.2s;
+}
+
+.login-form button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.login-form button:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 640px) {
+  .page-content {
+    padding: 1.25rem;
+  }
+
+  .login-form {
+    width: 100%;
+    padding: 1.75rem;
+    border-radius: 20px;
+  }
+
+  .nav {
+    padding: 1rem;
+    justify-content: center;
+  }
+}
