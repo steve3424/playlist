@@ -4,5 +4,8 @@
 - Start populating front end w/ data
 - cookie security
 - csrf
+- how to handle 500 errors on backend
 - no need to encrypt tickets
 - Look at bitwarden problems
+- if signout fails frontend should delete cookie and return to login
+- confirm networking is correct w/ nginx
