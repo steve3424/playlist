@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
       console.log("checkAuth called")
       try {
 
-        const response = await fetch("http://localhost/api/v1/users/whoami", {
+        const response = await fetch("http://localhost:8000/api/v1/users/whoami", {
           credentials: "include",
         });
 

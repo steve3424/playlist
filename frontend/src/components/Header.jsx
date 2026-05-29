@@ -15,7 +15,7 @@ export default function Header() {
 
   const handleSignOut = async () => {
     console.log("logging out...")
-    const response = await fetch(`http://localhost/api/v1/sessions/${user}`, {
+    const response = await fetch(`http://localhost:8000/api/v1/sessions/${user}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',

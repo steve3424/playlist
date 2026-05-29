@@ -13,7 +13,7 @@ export default function LoginPage() {
     event.preventDefault();
     try {
       console.log("logging in...")
-      const response = await fetch('http://localhost/api/v1/sessions', {
+      const response = await fetch('http://localhost:8000/api/v1/sessions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
