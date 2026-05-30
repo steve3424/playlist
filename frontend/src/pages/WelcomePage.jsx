@@ -14,9 +14,7 @@ export default function WelcomePage() {
           method: "GET",
           credentials: "include",
         });
-        const data = await response.json()
-
-        const bands = data.map(band => band.name) || [];
+        const bands = await response.json() || [];
         setBands(bands);
       } catch (error) {
         console.error("Failed to load bands", error);
@@ -28,6 +26,14 @@ export default function WelcomePage() {
 
     fetchBands();
   }, []);
+
+  const goToBand = async (event) => {
+    const bandName = event.currentTarget.value;
+    const idd = event.currentTarget.dataset.bandid
+    console.log("Band clicked:", bandName);
+    console.log("id:", idd);
+    // TODO: add navigation or band page logic here
+  };
 
   return (
     <div className="container">
@@ -43,12 +49,12 @@ export default function WelcomePage() {
                 <li key={band} className="band-item">
                   <button
                     type="button"
+                    data-bandid={band.id}
                     className="band-button"
-                    onClick={() => {
-                      // TODO: navigate to the band page when ready
-                    }}
+                    value={band.name}
+                    onClick={goToBand}
                   >
-                    {band}
+                    {band.name}
                   </button>
                 </li>
               ))}
