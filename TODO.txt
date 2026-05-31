@@ -1,13 +1,18 @@
-- API should use ID's
-- Standardize response structure
+UI
+1 finish out navigation (bands/songs/members/gigs)
+2 clean up UI code
+3 sign up option on /login card
+4 create band, add member, add songs
+- how to handle 500 errors on backend
+- Look at bitwarden problems
+- add loading screens
+
+BACKEND
+5 API should use ID's
+6 Standardize response structure
 - /content path for files
-- Start populating front end w/ data
 - cookie security
 - csrf
-- how to handle 500 errors on backend
 - no need to encrypt tickets
-- Look at bitwarden problems
-- if signout fails frontend should delete cookie and return to login
 - confirm networking is correct w/ nginx
-- add loading screens
-- sign up option on /login card
+- clean up database code

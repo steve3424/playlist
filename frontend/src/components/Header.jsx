@@ -1,5 +1,5 @@
 import { useAuth } from "../auth/AuthProvider";
-import { useNavigate, useLocation, Link, NavLink } from "react-router-dom";
+import { useNavigate, useLocation, useMatch, Link, NavLink } from "react-router-dom";
 import "./Header.css";
 
 export default function Header() {
@@ -9,7 +9,11 @@ export default function Header() {
 
   const isLogin = location.pathname === "/login";
   const isWelcome = location.pathname === "/welcome";
-  const isBandPage = location.pathname.startsWith("/band/");
+  const bandMatch = useMatch("/band/:bandName/*");
+  const bandName = bandMatch?.params?.bandName;
+  const encodedBandName = bandName ? encodeURIComponent(bandName) : "";
+  const bandBasePath = encodedBandName ? `/band/${encodedBandName}` : "/band";
+  const isBandPage = Boolean(bandName);
 
   const handleSignOut = async () => {
     console.log("logging out...")
@@ -38,9 +42,9 @@ export default function Header() {
         <Link to="/" className="app-title" aria-label="Playlist home">Playlist</Link>
         {isBandPage && (
           <nav className="nav" aria-label="Main navigation">
-            <NavLink to="/songs" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>songs</NavLink>
-            <NavLink to="/members" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>members</NavLink>
-            <NavLink to="/gigs" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>gigs</NavLink>
+            <NavLink to={`${bandBasePath}/songs`} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>songs</NavLink>
+            <NavLink to={`${bandBasePath}/members`} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>members</NavLink>
+            <NavLink to={`${bandBasePath}/gigs`} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>gigs</NavLink>
           </nav>
         )}
       </div>

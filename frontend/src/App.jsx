@@ -33,6 +33,21 @@ export default function App() {
                 <BandPage />
               </ProtectedRoute>
             } />
+            <Route path="/band/:bandName/songs" element={
+              <ProtectedRoute>
+                <BandPage section="Songs" />
+              </ProtectedRoute>
+            } />
+            <Route path="/band/:bandName/members" element={
+              <ProtectedRoute>
+                <BandPage section="Members" />
+              </ProtectedRoute>
+            } />
+            <Route path="/band/:bandName/gigs" element={
+              <ProtectedRoute>
+                <BandPage section="Gigs" />
+              </ProtectedRoute>
+            } />
           </Routes>
         </AuthProvider>
       </main>
