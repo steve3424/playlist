@@ -9,6 +9,7 @@ export default function Header() {
 
   const isLogin = location.pathname === "/login";
   const isWelcome = location.pathname === "/welcome";
+  const isBandPage = location.pathname.startsWith("/band/");
 
   const handleSignOut = async () => {
     console.log("logging out...")
@@ -35,7 +36,7 @@ export default function Header() {
     <header className="app-header" role="banner">
       <div className="left">
         <Link to="/" className="app-title" aria-label="Playlist home">Playlist</Link>
-        {isWelcome && (
+        {isBandPage && (
           <nav className="nav" aria-label="Main navigation">
             <NavLink to="/songs" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>songs</NavLink>
             <NavLink to="/members" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>members</NavLink>
@@ -44,7 +45,7 @@ export default function Header() {
         )}
       </div>
 
-      {isWelcome && user ? (
+      {(isWelcome || isBandPage) && user ? (
         <button className="sign-out-button" onClick={handleSignOut} aria-label="Sign out">
           sign_out()
         </button>

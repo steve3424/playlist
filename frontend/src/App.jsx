@@ -2,6 +2,7 @@ import { Routes, Route, Link, Navigate } from "react-router-dom";
 
 import LoginPage from "./pages/LoginPage";
 import WelcomePage from "./pages/WelcomePage";
+import BandPage from "./pages/BandPage";
 import PublicOnlyRoute from "./auth/PublicOnlyRoute";
 import ProtectedRoute from "./auth/ProtectedRoute"
 import { AuthProvider } from "./auth/AuthProvider";
@@ -25,6 +26,11 @@ export default function App() {
             <Route path="/welcome" element={
               <ProtectedRoute>
                 <WelcomePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/band/:bandName" element={
+              <ProtectedRoute>
+                <BandPage />
               </ProtectedRoute>
             } />
           </Routes>

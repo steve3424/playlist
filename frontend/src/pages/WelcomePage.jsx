@@ -1,8 +1,10 @@
 import { useAuth } from "../auth/AuthProvider";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function WelcomePage() {
   const {user} = useAuth();
+  const navigate = useNavigate();
   const [bands, setBands] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,12 +29,9 @@ export default function WelcomePage() {
     fetchBands();
   }, []);
 
-  const goToBand = async (event) => {
-    const bandName = event.currentTarget.value;
-    const idd = event.currentTarget.dataset.bandid
-    console.log("Band clicked:", bandName);
-    console.log("id:", idd);
-    // TODO: add navigation or band page logic here
+  const goToBand = (bandName) => {
+    if (!bandName) return;
+    navigate(`/band/${encodeURIComponent(bandName)}`);
   };
 
   return (
@@ -46,13 +45,11 @@ export default function WelcomePage() {
             <p>Here are the bands you are currently a member of:</p>
             <ul className="band-list">
               {bands.map((band) => (
-                <li key={band} className="band-item">
+                <li key={band.id ?? band.name} className="band-item">
                   <button
                     type="button"
-                    data-bandid={band.id}
                     className="band-button"
-                    value={band.name}
-                    onClick={goToBand}
+                    onClick={() => goToBand(band.name)}
                   >
                     {band.name}
                   </button>
