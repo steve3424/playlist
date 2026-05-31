@@ -1,5 +1,5 @@
 import { useAuth } from "../auth/AuthProvider";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link, NavLink } from "react-router-dom";
 import "./Header.css";
 
 export default function Header() {
@@ -7,11 +7,8 @@ export default function Header() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Don't show header on login page or
-  // if user is logged in.
-  if (location.pathname === "/login" || !user ) {
-    return null;
-  }
+  const isLogin = location.pathname === "/login";
+  const isWelcome = location.pathname === "/welcome";
 
   const handleSignOut = async () => {
     console.log("logging out...")
@@ -35,10 +32,23 @@ export default function Header() {
   };
 
   return (
-    <header className="app-header">
-      <button className="sign-out-button" onClick={handleSignOut}>
-        sign_out()
-      </button>
+    <header className="app-header" role="banner">
+      <div className="left">
+        <Link to="/" className="app-title" aria-label="Playlist home">Playlist</Link>
+        {isWelcome && (
+          <nav className="nav" aria-label="Main navigation">
+            <NavLink to="/songs" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>songs</NavLink>
+            <NavLink to="/members" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>members</NavLink>
+            <NavLink to="/gigs" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>gigs</NavLink>
+          </nav>
+        )}
+      </div>
+
+      {isWelcome && user ? (
+        <button className="sign-out-button" onClick={handleSignOut} aria-label="Sign out">
+          sign_out()
+        </button>
+      ) : null}
     </header>
   );
 }

@@ -9,3 +9,5 @@
 - Look at bitwarden problems
 - if signout fails frontend should delete cookie and return to login
 - confirm networking is correct w/ nginx
+- add loading screens
+- sign up option on /login card
