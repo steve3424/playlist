@@ -89,7 +89,7 @@ async def deleteBand(
     if 1 < len(members) or members[0]["id"] != leader[0]["leader"]:
         return JSONResponse({"message": "Band leader must remove all other members in order to delete band!"}, status_code=422)
     await db.bandDelete(name, leader[0]["leader"])
-    return f"'{name}' deleted!"
+    return JSONResponse({"message": f"'{name}' deleted!"}, status_code=200)
 
 @router.post("/{name}/members/{user_name}")
 async def addBandMember(
@@ -107,7 +107,7 @@ async def addBandMember(
         member_inserted = await db.bandAddMember(name, user_name)
         if not member_inserted:
             raise Exception("DB error!")
-        return f"{user_name} added to {name}!"
+        return JSONResponse({"message": f"{user_name} added to {name}!"}, status_code=200)
     except IntegrityError as ex:
         if ex.sqlite_errorcode == SQLITE_CONSTRAINT_UNIQUE:
             return JSONResponse({"message": f"{user_name} is already a member of {name}!"}, status_code=422)
@@ -132,7 +132,7 @@ async def removeBandMember(
     num_deleted = await db.bandMemberDelete(name, user_name)
     if num_deleted == 0:
         return f"{user_name} not in band!"
-    return f"Removed {user_name}!"
+    return JSONResponse({"message": f"Removed {user_name}!"}, status_code=200)
 
 @router.post("/{name}/songs/{song_name}")
 async def addSong(
@@ -210,7 +210,7 @@ async def deleteSong(
 ):
     # TODO: any other auth?
     await db.songDelete(name, song_name)
-    return "Deleted!"
+    return JSONResponse({"message": f"{song_name} deleted!"}, status_code=200)
 
 def processBandMembers(members: list[asql.Row]) -> list[dict]:
     bands = {}

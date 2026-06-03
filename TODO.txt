@@ -1,15 +1,14 @@
 UI
-1 finish out navigation (bands/songs/members/gigs)
-2 clean up UI code
-3 sign up option on /login card
-4 create band, add member, add songs
+4 finish out navigation (bands/songs/members/gigs)
+3 clean up UI code
+5 sign up option on /login card
+6 create band, add member, add songs
 - how to handle 500 errors on backend
 - Look at bitwarden problems
 - add loading screens
 
 BACKEND
-5 API should use ID's
-6 Standardize response structure
+2 API should use ID's
 - /content path for files
 - cookie security
 - csrf
